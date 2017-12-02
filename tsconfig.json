@@ -1,0 +1,22 @@
+{
+  "compilerOptions": {
+      "outDir": "./built/",
+      "sourceMap": true,
+      "strict": true,
+      "noImplicitReturns": true,
+      "noImplicitAny": true,
+      "module": "esnext",
+      "target": "es6",
+      "jsx": "preserve",
+      "moduleResolution": "node" // if don't set this, webpack won't work
+  },
+  // 非常重要：如果没有include，那么就无法在*.ts中引用*.vue文件
+  // 详见：https://www.tslang.cn/docs/handbook/tsconfig-json.html
+  "include": [
+      "./src",
+      "./test"
+  ],
+  "exclude": [
+      "/node_modules"
+  ]
+}
