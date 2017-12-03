@@ -28,6 +28,11 @@ module.exports = {
       // '@': resolve('src')
     }
   },
+  resolveLoader: {
+    alias: {
+      'tsx-loader': 'ts-loader' // 非常重要
+    }
+  },
   module: {
     rules: [
       {
