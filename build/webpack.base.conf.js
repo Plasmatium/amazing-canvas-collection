@@ -21,11 +21,11 @@ module.exports = {
       : config.dev.assetsPublicPath
   },
   resolve: {
-    extensions: ['ts', 'tsx', '.js', '.vue', '.json'],
+    extensions: ['.ts', '.tsx', '.js', '.vue', '.json'],
     alias: {
-      'vue': 'vue/dist/vue.esm.js',
-      'vue$': 'vue/dist/vue.esm.js',
-      '@': resolve('src')
+      vue: 'vue/dist/vue.esm.js',
+      // 'vue$': 'vue/dist/vue.esm.js',
+      // '@': resolve('src')
     }
   },
   module: {
@@ -41,7 +41,7 @@ module.exports = {
         include: [resolve('src'), resolve('test')]
       },
       {
-        test: /\.tsx?$/,
+        test: /\.tsx$/,
         use: [
           {
             loader: 'babel-loader'
@@ -49,7 +49,22 @@ module.exports = {
           {
             loader: 'ts-loader',
             options: {
-              appendTsSuffixTo: [/\.vue$/]
+              appendTsxSuffixTo: [/\.vue$/] //attention: append{ Tsx }SuffixTo
+            }
+          }
+        ],
+        exclude: /node_modules/
+      },
+      {
+        test: /\.ts$/,
+        use: [
+          {
+            loader: 'babel-loader'
+          },
+          {
+            loader: 'ts-loader',
+            options: {
+              appendTsSuffixTo: [/\.vue$/] //attention: append{ Ts }SuffixTo
             }
           }
         ],

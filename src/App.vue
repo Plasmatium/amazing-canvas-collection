@@ -5,9 +5,22 @@
   </div>
 </template>
 
-<script lang="ts">
+<script lang="tsx">
 import Vue from 'vue'
 import HelloWorld from './components/HelloWorld.vue'
+
+import { setSeed, random } from './utils/random-seed'
+setSeed(3.14)
+console.log(random())
+console.log(random())
+
+setSeed(0.618)
+console.log(random())
+console.log(random())
+
+setSeed(3.14)
+console.log(random())
+console.log(random())
 
 export default Vue.extend({
   name: 'app',

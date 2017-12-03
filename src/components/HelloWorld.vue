@@ -1,3 +1,4 @@
+<!--
 <template>
   <div class="hello">
     <h1>{{ msg }}</h1>
@@ -19,8 +20,9 @@
     </ul>
   </div>
 </template>
+-->
 
-<script lang="ts">
+<script lang="tsx">
 import Vue from 'vue'
 export default Vue.extend({
   name: 'HelloWorld',
@@ -28,6 +30,9 @@ export default Vue.extend({
     return {
       msg: 'Welcome to Your Vue.js App'
     }
+  },
+  render (h) {
+    return h('h1', {style: {color: 'red'}}, 'Hello world!')
   }
 })
 </script>
