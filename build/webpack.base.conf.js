@@ -30,7 +30,8 @@ module.exports = {
   },
   resolveLoader: {
     alias: {
-      'tsx-loader': 'ts-loader' // 非常重要
+      // 非常重要
+      'tsx-loader': 'ts-loader'
     }
   },
   module: {
@@ -53,9 +54,13 @@ module.exports = {
           },
           {
             loader: 'ts-loader',
-            options: {
-              appendTsxSuffixTo: [/\.vue$/] //attention: append{ Tsx }SuffixTo
-            }
+            // options: {
+            //   //attention: append{ Tsx }SuffixTo
+            //   // appendTsxSuffixTo: [/\.vue$/]
+            // }
+            // options: {
+            //   appendTsxSuffixTo: [/\.vue$/] //attention: append{ Tsx }SuffixTo
+            // }
           }
         ],
         exclude: /node_modules/

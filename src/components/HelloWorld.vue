@@ -32,7 +32,7 @@ export default Vue.extend({
     }
   },
   render (h) {
-    return h('h1', {style: {color: 'red'}}, 'Hello world!')
+    return h('h1', {style: {color: 'green'}}, 'Hello world!')
   }
 })
 </script>
