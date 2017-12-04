@@ -4,6 +4,17 @@ const utils = require('./utils')
 const config = require('../config')
 const vueLoaderConfig = require('./vue-loader.conf')
 
+// add ts | tsx support
+vueLoaderConfig.loaders.tsx = [
+  'babel-loader',
+  {
+    loader: 'ts-loader',
+    options: {
+      appendTsxSuffixTo: [/\.vue$/]
+    }
+  }
+]
+
 function resolve (dir) {
   return path.join(__dirname, '..', dir)
 }
@@ -31,7 +42,7 @@ module.exports = {
   resolveLoader: {
     alias: {
       // 非常重要
-      'tsx-loader': 'ts-loader'
+      // 'tsx-loader': 'ts-loader'
     }
   },
   module: {
@@ -73,9 +84,9 @@ module.exports = {
           },
           {
             loader: 'ts-loader',
-            options: {
-              appendTsxSuffixTo: [/\.vue$/] //attention: append{ Ts }SuffixTo
-            }
+            // options: {
+            //   appendTsSuffixTo: [/\.vue$/] //attention: append{ Ts }SuffixTo
+            // }
           }
         ],
         exclude: /node_modules/
