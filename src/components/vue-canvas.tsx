@@ -5,7 +5,8 @@ export default Vue.extend({
   data () {
     return {}
   },
-  render (h) {
-    return h('h1', 'hello world')
+  render () {
+    let style = {color: 'purple'}
+    return <h2 style= {{...style}}>Hello World by tsx</h2>
   }
 })

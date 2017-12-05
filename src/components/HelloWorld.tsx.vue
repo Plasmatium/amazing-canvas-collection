@@ -32,7 +32,10 @@ export default Vue.extend({
     }
   },
   render (h) {
-    return h('h1', {style: {color: 'green'}}, 'Hello world!')
+    let style = {color: 'orange'}
+    let h1 = <h1 style={{...style}}>Hello world! in SFC vue -> lang="tsx"</h1>
+    let p = <p>{(this as any).msg}</p>
+    return <div>{[h1, p]}</div>
   }
 })
 </script>

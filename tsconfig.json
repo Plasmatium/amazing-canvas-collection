@@ -14,7 +14,8 @@
   // 详见：https://www.tslang.cn/docs/handbook/tsconfig-json.html
   "include": [
       "./src",
-      "./test"
+      "./test",
+      "node_modules/vue-tsx-support/enable-check.d.ts"
   ],
   "exclude": [
       "/node_modules"

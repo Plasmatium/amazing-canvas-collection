@@ -2,12 +2,14 @@
   <div id="app">
     <img src="./assets/logo.png">
     <HelloWorld/>
+    <vue-canvas/>
   </div>
 </template>
 
 <script lang="ts">
 import Vue from 'vue'
 import HelloWorld from './components/HelloWorld.tsx.vue'
+import VueCanvas from './components/vue-canvas'
 
 import { setSeed, random } from './utils/random-seed'
 setSeed(3.14)
@@ -25,7 +27,8 @@ console.log(random())
 export default Vue.extend({
   name: 'app',
   components: {
-    HelloWorld
+    HelloWorld,
+    VueCanvas
   }
 })
 </script>
