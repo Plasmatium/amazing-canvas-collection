@@ -5,9 +5,9 @@
   </div>
 </template>
 
-<script lang="tsx">
+<script lang="ts">
 import Vue from 'vue'
-import HelloWorld from './components/HelloWorld.vue'
+import HelloWorld from './components/HelloWorld.tsx.vue'
 
 import { setSeed, random } from './utils/random-seed'
 setSeed(3.14)
