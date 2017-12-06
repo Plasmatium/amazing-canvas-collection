@@ -28,14 +28,22 @@ export default Vue.extend({
   name: 'HelloWorld',
   data () {
     return {
-      msg: 'Welcome to Your Vue.js App'
+      msg: 'Welcome to Your Vue.js App. This element is rendered by .tsx.vue with <script lang="tsx">',
+      num: 2
     }
   },
-  render (h) {
+  computed: {
+    renderRet (): JSX.Element {
+      return <p>This is an {'<element>'} in `computed` invokes `this.num` = {this.num}</p>
+    }
+  },
+  render (): JSX.Element {
     let style = {color: 'orange'}
-    let h1 = <h1 style={{...style}}>Hello world! in SFC vue -> lang="tsx"</h1>
-    let p = <p>{(this as any).msg}</p>
-    return <div>{[h1, p]}</div>
+    let h3 = <h3 style={{...style}}>{this.msg}</h3>
+    let input = <input type="text" onInput={e => this.msg = (e.target as any).value}></input>
+    let ret = <div style={{border: '1px solid #777'}}>{[h3, input, this.renderRet]}</div>
+    
+    return ret
   }
 })
 </script>

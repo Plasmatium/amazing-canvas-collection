@@ -5,6 +5,7 @@
       "strict": true,
       "noImplicitReturns": true,
       "noImplicitAny": true,
+      "noImplicitThis": true,
       "module": "esnext",
       "target": "es6",
       "jsx": "preserve",
