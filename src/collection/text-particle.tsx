@@ -14,6 +14,8 @@ class Dot {
     x: number, y: number, r: number, color: number[], cv: Canvas) {
     Object.assign(this, {x, y, r, color, cv})
     this.dir = {vx: random() - 0.5, vy: random() - 0.5}
+    this.color = [Math.floor(128*random() + 100),Math.floor(128*random() + 100),Math.floor(128*random() + 100), random()*0.3 + 0.5]
+    this.r *= 0.5 + random()
   }
   mutate () {
     let {windowH, windowW} = this.cv
