@@ -1,15 +1,12 @@
 <template>
   <div id="app">
-    <img src="./assets/logo.png">
-    <HelloWorld/>
-    <vue-canvas/>
+    <text-particle/>
   </div>
 </template>
 
 <script lang="ts">
 import Vue from 'vue'
-import HelloWorld from './components/HelloWorld.tsx.vue'
-import VueCanvas from './components/vue-canvas'
+import TextParticle from './collection/text-particle'
 
 import { setSeed, random } from './utils/random-seed'
 setSeed(3.14)
@@ -27,19 +24,20 @@ console.log(random())
 export default Vue.extend({
   name: 'app',
   components: {
-    HelloWorld,
-    VueCanvas
+    TextParticle
   }
 })
 </script>
 
 <style>
+* {
+  margin: 0
+}
 #app {
   font-family: 'Avenir', Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
   color: #2c3e50;
-  margin-top: 60px;
 }
 </style>

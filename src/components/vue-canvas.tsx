@@ -3,19 +3,11 @@ import * as util from 'util'
 
 export default Vue.extend({
   name: 'vue-canvas',
-  props: {
-    width: Number,
-    height: Number
-  },
-  data () {
-    return {
-      msg: 'this component is rendered by pure .tsx'
-    }
+  computed: {
   },
   render () {
-    let style = {color: 'purple'}
-    let h2 = <h2 style= {{...style}}>{this.msg}</h2>
-    let ret: any = h2
-    return ret
+    let height = window.innerHeight
+    let width = window.innerWidth
+    return <canvas height={height} width={width}>canvas is not support</canvas>
   }
 })

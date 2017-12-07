@@ -24,6 +24,7 @@
 
 <script lang="tsx">
 import Vue from 'vue'
+import * as util from 'util'
 export default Vue.extend({
   name: 'HelloWorld',
   data () {
@@ -40,7 +41,8 @@ export default Vue.extend({
   render (): JSX.Element {
     let style = {color: 'orange'}
     let h3 = <h3 style={{...style}}>{this.msg}</h3>
-    let input = <input type="text" onInput={e => this.msg = (e.target as any).value}></input>
+    let input = <input type="text"
+      onInput={(e) => this.msg = (e.target as HTMLInputElement).value}></input>
     let ret = <div style={{border: '1px solid #777'}}>{[h3, input, this.renderRet]}</div>
     
     return ret
