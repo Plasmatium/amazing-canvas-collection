@@ -9,17 +9,6 @@ import Vue from 'vue'
 import TextParticle from './collection/text-particle'
 
 import { setSeed, random } from './utils/random-seed'
-setSeed(3.14)
-console.log(random())
-console.log(random())
-
-setSeed(0.618)
-console.log(random())
-console.log(random())
-
-setSeed(3.14)
-console.log(random())
-console.log(random())
 
 export default Vue.extend({
   name: 'app',
@@ -40,4 +29,10 @@ export default Vue.extend({
   text-align: center;
   color: #2c3e50;
 }
+/* .bg {
+  position: fixed;
+  top: 100px;
+  left: 400px;
+  z-index: -1;
+} */
 </style>
