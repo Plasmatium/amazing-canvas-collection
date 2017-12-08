@@ -13,7 +13,7 @@ class Dot {
   constructor (
     x: number, y: number, r: number, color: number[], cv: Canvas) {
     Object.assign(this, {x, y, r, color, cv})
-    this.dir = {vx: random() - 0.5, vy: random() - 0.5}
+    this.dir = {vx: random()*3 - 1.5, vy: random()*3 - 1.5}
     // this.color = [Math.floor(128*random() + 100),Math.floor(128*random() + 100),Math.floor(128*random() + 100), random()*0.3 + 0.5]
   }
   mutate () {
@@ -85,19 +85,19 @@ class Canvas {
     let dots: Dot[] = this.dots = new Array<Dot>(count)
     for (let i = 0; i < count; i++) {
       let {x, y} = this.randPos()
-      dots[i] = new Dot(x, y, 1.62, [0xc4, 0xc4, 0xc4, 0.92], this)
+      dots[i] = new Dot(x, y, 1.62, [0xac, 0xbd, 0xce, 0.62], this)
     }
   }
   render () {
     let {ctx, windowH, windowW} = this
     this.clrscr()
-    let threshold = Math.sqrt(0.618*windowW*windowH/Math.PI)
+    let threshold = Math.sqrt(0.618*windowW*windowH/Math.PI)*0.62
 
     this.dots.forEach((dot, idx) => {
       // lines
       this.dots.slice(idx+1).forEach(anotherDot => {
-        let d = ((dot.x-anotherDot.x)**2 + (dot.y-anotherDot.y)**2)**0.5
-        let a = (1 - d/95)
+        let d = ((dot.x-anotherDot.x)**2 + (dot.y-anotherDot.y)**2)
+        let a = (1 - d/95/95)
         if (a < 0) return
         ctx.beginPath()
         ctx.moveTo(dot.x, dot.y)
@@ -120,7 +120,7 @@ class Canvas {
 
 window.onload = function () {
   let cv = new Canvas('particle1')
-  cv.createPoints(Math.floor(500*cv.windowH*cv.windowW/(1920*1080)))
+  cv.createPoints(Math.floor(250*cv.windowH*cv.windowW/(1920*1080)))
   cv.animate()
 }
 

@@ -1,19 +1,19 @@
 <template>
   <div id="app">
-    <text-particle/>
+    <needle-dot/>
   </div>
 </template>
 
 <script lang="ts">
 import Vue from 'vue'
-import TextParticle from './collection/text-particle'
+import NeedleDot from './collection/NeedleDot'
 
 import { setSeed, random } from './utils/random-seed'
 
 export default Vue.extend({
   name: 'app',
   components: {
-    TextParticle
+    NeedleDot
   }
 })
 </script>

@@ -7,7 +7,7 @@ const os = require('os')
 
 let network = os.networkInterfaces()
 for (let k in network) {
-  network[k].forEach(net => net.family === 'IPv4' && (process.env.host = net.address))
+  network[k].forEach(net => net.family === 'IPv4' && !net.address.includes('127') && (process.env.host = net.address))
 }
 
 module.exports = {
