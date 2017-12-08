@@ -105,7 +105,6 @@ class Canvas {
         ctx.closePath()
         ctx.strokeStyle = `rgba(50, 128, 255, ${a})`
         ctx.stroke()
-        debugger
       })
       dot.draw()
       dot.mutate()
@@ -118,11 +117,11 @@ class Canvas {
   }
 }
 
-window.onload = function () {
-  let cv = new Canvas('particle1')
-  cv.createPoints(Math.floor(250*cv.windowH*cv.windowW/(1920*1080)))
-  cv.animate()
-}
+// window.onload = function () {
+//   let cv = new Canvas('particle1')
+//   cv.createPoints(Math.floor(250*cv.windowH*cv.windowW/(1920*1080)))
+//   cv.animate()
+// }
 
 export default Vue.extend({
   components: {
@@ -130,5 +129,10 @@ export default Vue.extend({
   },
   render () {
     return <vue-canvas id="particle1"/>
+  },
+  mounted () {
+      let cv = new Canvas('particle1')
+      cv.createPoints(Math.floor(250*cv.windowH*cv.windowW/(1920*1080)))
+      cv.animate()
   }
 })
