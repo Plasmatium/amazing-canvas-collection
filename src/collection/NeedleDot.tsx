@@ -25,16 +25,16 @@ class Dot {
     if (this.x < 0) {
       this.x = 0
       this.dir.vx *= -1
-    } else if (this.x > windowW) {
-      this.x = windowW
+    } else if (this.x > windowW()) {
+      this.x = windowW()
       this.dir.vx *= -1
     }
 
     if (this.y < 0) {
       this.y = 0
       this.dir.vy *= -1
-    } else if (this.y > windowH) {
-      this.y = windowH
+    } else if (this.y > windowH()) {
+      this.y = windowH()
       this.dir.vy *= -1
     }
   }
@@ -52,8 +52,8 @@ class Dot {
 class Canvas {
   canvas: HTMLCanvasElement
   ctx: CanvasRenderingContext2D
-  windowH: number
-  windowW: number
+  windowH: () => number
+  windowW: () => number
   bgColor: string
   dots: Dot[]
   constructor (id: string, bgColor = '#eaeaea') {
@@ -64,8 +64,8 @@ class Canvas {
     if (!ctx) throw Error(`context not found. id: ${id}`)
     this.ctx = ctx
 
-    this.windowH = this.canvas.height
-    this.windowW = this.canvas.width
+    this.windowH = () => this.canvas.height
+    this.windowW = () => this.canvas.width
 
     this.bgColor = bgColor
     this.clrscr()
@@ -73,12 +73,12 @@ class Canvas {
   clrscr (bgColor: string = this.bgColor) {
     let {ctx, windowH, windowW} = this
     ctx.fillStyle = bgColor
-    ctx.fillRect(0, 0, windowW, windowH)
+    ctx.fillRect(0, 0, windowW(), windowH())
   }
   randPos () {
     let {windowH, windowW} = this
-    let x = random() * windowW
-    let y = random() * windowH
+    let x = random() * windowW()
+    let y = random() * windowH()
     return {x, y}
   }
   createPoints (count: number) {
@@ -91,7 +91,7 @@ class Canvas {
   render () {
     let {ctx, windowH, windowW} = this
     this.clrscr()
-    let threshold = Math.sqrt(0.618*windowW*windowH/Math.PI)*0.62
+    let threshold = Math.sqrt(0.618*windowW()*windowH()/Math.PI)*0.62
 
     this.dots.forEach((dot, idx) => {
       // lines
@@ -131,8 +131,14 @@ export default Vue.extend({
     return <vue-canvas id="particle1"/>
   },
   mounted () {
-      let cv = new Canvas('particle1')
-      cv.createPoints(Math.floor(250*cv.windowH*cv.windowW/(1920*1080)))
-      cv.animate()
+    let cv = new Canvas('particle1')
+    cv.createPoints(Math.floor(250*cv.windowH()*cv.windowW()/(1920*1080)))
+    cv.animate()
+
+    window.onresize = e => {
+      let target = e.target as (typeof window)
+      cv.canvas.height = target.innerHeight
+      cv.canvas.width = target.innerWidth
+    }
   }
 })
