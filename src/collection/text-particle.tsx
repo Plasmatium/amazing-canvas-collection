@@ -14,8 +14,7 @@ class Dot {
     x: number, y: number, r: number, color: number[], cv: Canvas) {
     Object.assign(this, {x, y, r, color, cv})
     this.dir = {vx: random() - 0.5, vy: random() - 0.5}
-    this.color = [Math.floor(128*random() + 100),Math.floor(128*random() + 100),Math.floor(128*random() + 100), random()*0.3 + 0.5]
-    this.r *= 0.5 + random()
+    // this.color = [Math.floor(128*random() + 100),Math.floor(128*random() + 100),Math.floor(128*random() + 100), random()*0.3 + 0.5]
   }
   mutate () {
     let {windowH, windowW} = this.cv
@@ -42,10 +41,9 @@ class Dot {
   draw () {
     let {ctx, canvas} = this.cv
     let {x, y, r} = this
-    ctx.strokeStyle = ''
     ctx.fillStyle = `rgba(${[...this.color]})`
     ctx.beginPath()
-    ctx.arc(x, y, r*10, 0, 2*Math.PI)
+    ctx.arc(x, y, r, 0, 2*Math.PI)
     ctx.closePath()
     ctx.fill()
   }
@@ -87,23 +85,27 @@ class Canvas {
     let dots: Dot[] = this.dots = new Array<Dot>(count)
     for (let i = 0; i < count; i++) {
       let {x, y} = this.randPos()
-      dots[i] = new Dot(x, y, 1.62, [0xca, 0xca, 0xca, 1], this)
+      dots[i] = new Dot(x, y, 1.62, [0xc4, 0xc4, 0xc4, 0.92], this)
     }
   }
   render () {
-    let {ctx} = this
+    let {ctx, windowH, windowW} = this
     this.clrscr()
+    let threshold = Math.sqrt(0.618*windowW*windowH/Math.PI)
+
     this.dots.forEach((dot, idx) => {
       // lines
       this.dots.slice(idx+1).forEach(anotherDot => {
         let d = ((dot.x-anotherDot.x)**2 + (dot.y-anotherDot.y)**2)**0.5
-        let a = (1 - d/60)
+        let a = (1 - d/95)
         if (a < 0) return
-        let color = `rgba(0,0,0,${a*0.62})`
-        ctx.strokeStyle = color
+        ctx.beginPath()
         ctx.moveTo(dot.x, dot.y)
         ctx.lineTo(anotherDot.x, anotherDot.y)
+        ctx.closePath()
+        ctx.strokeStyle = `rgba(50, 128, 255, ${a})`
         ctx.stroke()
+        debugger
       })
       dot.draw()
       dot.mutate()
@@ -118,7 +120,7 @@ class Canvas {
 
 window.onload = function () {
   let cv = new Canvas('particle1')
-  cv.createPoints(200)
+  cv.createPoints(Math.floor(500*cv.windowH*cv.windowW/(1920*1080)))
   cv.animate()
 }
 
