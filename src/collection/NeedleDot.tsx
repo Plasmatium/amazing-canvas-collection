@@ -19,6 +19,8 @@ class Dot {
   mutate () {
     let {windowH, windowW} = this.cv
 
+    this.dir.vx += Math.sin(this.dir.vx/1000)/1000
+    this.dir.vy += Math.cos(this.dir.vy/1000)/1000
     this.x += this.dir.vx
     this.y += this.dir.vy
 
@@ -91,19 +93,20 @@ class Canvas {
   render () {
     let {ctx, windowH, windowW} = this
     this.clrscr()
-    let threshold = Math.sqrt(0.618*windowW()*windowH()/Math.PI)*0.62
+    let dThreshold = Math.sqrt(0.618*windowW()*windowH()/Math.PI)*30
 
     this.dots.forEach((dot, idx) => {
       // lines
       this.dots.slice(idx+1).forEach(anotherDot => {
-        let d = ((dot.x-anotherDot.x)**2 + (dot.y-anotherDot.y)**2)
-        let a = (1 - d/95/95)
+        let dsqr = ((dot.x-anotherDot.x)**2 + (dot.y-anotherDot.y)**2)
+        let a = (1 - dsqr/dThreshold)
         if (a < 0) return
         ctx.beginPath()
         ctx.moveTo(dot.x, dot.y)
         ctx.lineTo(anotherDot.x, anotherDot.y)
         ctx.closePath()
         ctx.strokeStyle = `rgba(50, 128, 255, ${a})`
+        ctx.lineWidth = 0.3
         ctx.stroke()
       })
       dot.draw()
@@ -113,7 +116,7 @@ class Canvas {
   animate () {
     setInterval(() => {
       this.render()
-    }, 16)
+    }, 20)
   }
 }
 
