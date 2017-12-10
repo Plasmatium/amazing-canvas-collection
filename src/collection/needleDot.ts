@@ -1,5 +1,5 @@
 import Vue from 'vue'
-import VueCanvas from '../components/vue-canvas'
+// import VueCanvas from '../components/vue-canvas'
 
 let random = () => Math.random()
 
@@ -58,12 +58,12 @@ class Canvas {
   windowW: () => number
   bgColor: string
   dots: Dot[]
-  constructor (id: string, bgColor = '#eaeaea') {
-    let canvas = document.getElementById(id) as HTMLCanvasElement
-    if (!canvas) throw Error(`canvas id not found. id: ${id}`)
+  constructor (bgColor = '#eaeaea') {
+    let canvas = document.getElementsByTagName('canvas')[0] as HTMLCanvasElement
+    if (!canvas) throw Error(`canvas not found.`)
     this.canvas = canvas
     let ctx = canvas.getContext('2d')
-    if (!ctx) throw Error(`context not found. id: ${id}`)
+    if (!ctx) throw Error(`context not found.`)
     this.ctx = ctx
 
     this.windowH = () => this.canvas.height
@@ -95,6 +95,7 @@ class Canvas {
     this.clrscr()
     let dThreshold = Math.sqrt(0.618*windowW()*windowH()/Math.PI)*30
 
+    ctx.lineWidth = 0.3
     this.dots.forEach((dot, idx) => {
       // lines
       this.dots.slice(idx+1).forEach(anotherDot => {
@@ -106,7 +107,6 @@ class Canvas {
         ctx.lineTo(anotherDot.x, anotherDot.y)
         ctx.closePath()
         ctx.strokeStyle = `rgba(50, 128, 255, ${a})`
-        ctx.lineWidth = 0.3
         ctx.stroke()
       })
       dot.draw()
@@ -116,7 +116,7 @@ class Canvas {
   animate () {
     setInterval(() => {
       this.render()
-    }, 20)
+    }, 16)
   }
 }
 
@@ -126,22 +126,14 @@ class Canvas {
 //   cv.animate()
 // }
 
-export default Vue.extend({
-  components: {
-    'vue-canvas': VueCanvas
-  },
-  render () {
-    return <vue-canvas id="particle1"/>
-  },
-  mounted () {
-    let cv = new Canvas('particle1')
-    cv.createPoints(Math.floor(250*cv.windowH()*cv.windowW()/(1920*1080)))
-    cv.animate()
+export function needleDot () {
+  let cv = new Canvas()
+  cv.createPoints(Math.floor(250*cv.windowH()*cv.windowW()/(1920*1080)))
+  cv.animate()
 
-    window.onresize = e => {
-      let target = e.target as (typeof window)
-      cv.canvas.height = target.innerHeight
-      cv.canvas.width = target.innerWidth
-    }
+  window.onresize = e => {
+    let target = e.target as (typeof window)
+    cv.canvas.height = target.innerHeight
+    cv.canvas.width = target.innerWidth
   }
-})
+}

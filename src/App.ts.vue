@@ -1,19 +1,34 @@
 <template>
   <div id="app">
-    <needle-dot/>
+    <ul>
+      <li class="script-link" v-for="link in links" :key="link">
+        <router-link :to="link">{{link}}</router-link>
+      </li>
+    </ul>
+    <router-view />
   </div>
 </template>
 
 <script lang="ts">
 import Vue from 'vue'
-import NeedleDot from './collection/NeedleDot'
+import {makeCanvas} from './components/vue-canvas'
+import {router, links} from './router'
+import VueRouter from 'vue-router'
 
-import { setSeed, random } from './utils/random-seed'
+Vue.use(VueRouter)
 
 export default Vue.extend({
   name: 'app',
-  components: {
-    NeedleDot
+  data () {
+    return {
+      links
+    }
+  },
+  router,
+  computed: {
+    scripts (): any {
+      return this.$router
+    }
   }
 })
 </script>
@@ -29,10 +44,8 @@ export default Vue.extend({
   text-align: center;
   color: #2c3e50;
 }
-/* .bg {
-  position: fixed;
-  top: 100px;
-  left: 400px;
-  z-index: -1;
-} */
+.script-link {
+  display: inline;
+  margin: 0 0.62rem;
+}
 </style>
