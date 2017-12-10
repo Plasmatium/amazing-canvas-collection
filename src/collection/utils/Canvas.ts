@@ -16,7 +16,7 @@ class Canvas {
   windowH: () => number
   windowW: () => number
   bgColor: string
-  pinterBox: PainterBox
+  
   constructor (bgColor = '#eaeaea', painterBox: PainterBox) {
     let canvas = document.getElementsByTagName('canvas')[0] as HTMLCanvasElement
     if (!canvas) throw Error(`canvas not found.`)
