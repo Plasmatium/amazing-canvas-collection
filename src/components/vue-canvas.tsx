@@ -10,7 +10,8 @@ export function makeCanvas(script: Function) {
     render () {
       let height = window.innerHeight
       let width = window.innerWidth
-      return <canvas height={height} width={width}>canvas is not support</canvas>
+      let style = {position: 'fixed', top: 0, left: 0, 'z-index': -1}
+      return <canvas height={height} width={width} style={style}>canvas is not support</canvas>
     }
   })
 } 
