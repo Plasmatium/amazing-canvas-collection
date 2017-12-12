@@ -1,5 +1,5 @@
 import Vue from 'vue'
-// import VueCanvas from '../components/vue-canvas'
+import { Canvas } from './utils/Canvas'
 
 let random = () => Math.random()
 
@@ -27,16 +27,16 @@ class Dot {
     if (this.x < 0) {
       this.x = 0
       this.dir.vx *= -1
-    } else if (this.x > windowW()) {
-      this.x = windowW()
+    } else if (this.x > windowW) {
+      this.x = windowW
       this.dir.vx *= -1
     }
 
     if (this.y < 0) {
       this.y = 0
       this.dir.vy *= -1
-    } else if (this.y > windowH()) {
-      this.y = windowH()
+    } else if (this.y > windowH) {
+      this.y = windowH
       this.dir.vy *= -1
     }
   }
@@ -51,54 +51,38 @@ class Dot {
   }
 }
 
-class Canvas {
-  canvas: HTMLCanvasElement
-  ctx: CanvasRenderingContext2D
-  windowH: () => number
-  windowW: () => number
+class NeedleDotCanvas extends Canvas {
   bgColor: string
-  dots: Dot[]
+  data: Dot[]
   constructor (bgColor = '#eaeaea') {
-    let canvas = document.getElementsByTagName('canvas')[0] as HTMLCanvasElement
-    if (!canvas) throw Error(`canvas not found.`)
-    this.canvas = canvas
-    let ctx = canvas.getContext('2d')
-    if (!ctx) throw Error(`context not found.`)
-    this.ctx = ctx
-
-    this.windowH = () => this.canvas.height
-    this.windowW = () => this.canvas.width
-
-    this.bgColor = bgColor
-    this.clrscr()
+    super (bgColor)
+    this.createDots()
   }
-  clrscr (bgColor: string = this.bgColor) {
-    let {ctx, windowH, windowW} = this
+  clrscr ({bgColor, canvas, ctx, windowH, windowW, data}: Canvas) {
     ctx.fillStyle = bgColor
-    ctx.fillRect(0, 0, windowW(), windowH())
+    ctx.fillRect(0, 0, windowW, windowH)
   }
   randPos () {
     let {windowH, windowW} = this
-    let x = random() * windowW()
-    let y = random() * windowH()
+    let x = random() * windowW
+    let y = random() * windowH
     return {x, y}
   }
-  createPoints (count: number) {
-    let dots: Dot[] = this.dots = new Array<Dot>(count)
+  createDots () {
+    let count = Math.floor(250*this.windowH*this.windowW/(1920*1080))
+    let data: Dot[] = this.data = new Array<Dot>(count)
     for (let i = 0; i < count; i++) {
       let {x, y} = this.randPos()
-      dots[i] = new Dot(x, y, 1.62, [0xac, 0xbd, 0xce, 0.62], this)
+      data[i] = new Dot(x, y, 1.62, [0xac, 0xbd, 0xce, 0.62], this as Canvas)
     }
   }
-  render () {
-    let {ctx, windowH, windowW} = this
-    this.clrscr()
-    let dThreshold = Math.sqrt(0.618*windowW()*windowH()/Math.PI)*30
+  render ({canvas, ctx, windowH, windowW, data}: Canvas) {
+    let dThreshold = Math.sqrt(0.618*windowW*windowH/Math.PI)*30
 
     ctx.lineWidth = 0.3
-    this.dots.forEach((dot, idx) => {
+    this.data.forEach((dot, idx) => {
       // lines
-      this.dots.slice(idx+1).forEach(anotherDot => {
+      this.data.slice(idx+1).forEach(anotherDot => {
         let dsqr = ((dot.x-anotherDot.x)**2 + (dot.y-anotherDot.y)**2)
         let a = (1 - dsqr/dThreshold)
         if (a < 0) return
@@ -113,22 +97,15 @@ class Canvas {
       dot.mutate()
     })
   }
-  animate () {
+  animate ({canvas, ctx, windowH, windowW, data}: Canvas = this) {
     setInterval(() => {
-      this.render()
+      this.flush()
     }, 16)
   }
 }
 
-// window.onload = function () {
-//   let cv = new Canvas('particle1')
-//   cv.createPoints(Math.floor(250*cv.windowH*cv.windowW/(1920*1080)))
-//   cv.animate()
-// }
-
 export function needleDot () {
-  let cv = new Canvas()
-  cv.createPoints(Math.floor(250*cv.windowH()*cv.windowW()/(1920*1080)))
+  let cv = new NeedleDotCanvas()
   cv.animate()
 
   window.onresize = e => {

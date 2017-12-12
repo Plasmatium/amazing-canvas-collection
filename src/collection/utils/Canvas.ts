@@ -1,28 +1,8 @@
-import { setInterval } from "timers";
-
-// type func = (...p: any[]) => any
-
-// interface CanvasOptions<T> {
-//   render: func
-//   renderMask: func
-//   clrscr: func
-//   animate: func
-//   createData?: ({canvas, ctx, windowH, windowW}: RawCanvas) => T
-//   data:T
-// }
-
-// interface RawCanvas {
-//   canvas: HTMLCanvasElement
-//   ctx: CanvasRenderingContext2D
-//   windowH: () => number
-//   windowW: () => number
-// }
-
 export abstract class Canvas{
   canvas: HTMLCanvasElement
   ctx: CanvasRenderingContext2D
   data: any
-  constructor () {
+  constructor (public bgColor: string) {
     let canvas = document.getElementsByTagName('canvas')[0] as HTMLCanvasElement
     if (!canvas) throw Error(`canvas not found.`)
     this.canvas = canvas
@@ -37,27 +17,29 @@ export abstract class Canvas{
       this.canvas.width = target.innerWidth
     }
   }
-  windowH = () => this.canvas.height
-  windowW = () => this.canvas.width
-  abstract clrscr (bgColor: string, {canvas, ctx, windowH, windowW, data}: Canvas): void
+  // windowH = () => this.canvas.height
+  // windowW = () => this.canvas.width
+  get windowH () { return this.canvas.height }
+  get windowW () { return this.canvas.width }
+  abstract clrscr ({bgColor, canvas, ctx, windowH, windowW, data}: Canvas): void
   abstract render ({canvas, ctx, windowH, windowW, data}: Canvas): void
   abstract animate ({canvas, ctx, windowH, windowW, data}: Canvas): void
-  flush (bgColor: string) {
-    this.clrscr(bgColor, this)
+  flush (bgColor: string = this.bgColor) {
+    this.clrscr(this)
     this.render(this)
   }
 }
 
 class DefaultCanvas extends Canvas {
   step: number
-  constructor (private bgColor: string) {
-    super()
+  constructor (public bgColor: string) {
+    super(bgColor)
     this.step = 0.0
   }
-  clrscr (bgColor: string, {canvas, ctx, windowH, windowW, data}: Canvas = this) {
+  clrscr ({bgColor, canvas, ctx, windowH, windowW, data}: Canvas = this) {
     // ctx.clearRect(0, 0, windowW(), windowH())
     ctx.fillStyle = bgColor
-    ctx.fillRect(0, 0, windowW(), windowH())
+    ctx.fillRect(0, 0, windowW, windowH)
   }
   render ({canvas, ctx, windowH, windowW, data}: Canvas = this) {
     let r = Math.floor((Math.sin(this.step) / 2 + 0.5) * 255)

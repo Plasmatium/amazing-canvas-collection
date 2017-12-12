@@ -15,4 +15,7 @@ routes.push({
   component: makeCanvas(defaultCanvas)
 })
 
-export const router = new VueRouter({routes})
+export const router = new VueRouter({
+  routes,
+  mode: 'history'
+})
