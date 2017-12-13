@@ -25,11 +25,14 @@ export abstract class Canvas{
   // windowW = () => this.canvas.width
   get windowH () { return this.canvas.height }
   get windowW () { return this.canvas.width }
-  abstract clrscr ({bgColor, canvas, ctx, windowH, windowW, data}: Canvas): void
   abstract renderMain ({canvas, ctx, windowH, windowW, data}: Canvas): void
   abstract animate ({canvas, ctx, windowH, windowW, data}: Canvas): void
+  clrscr ({bgColor, canvas, ctx, windowH, windowW, data}: Canvas = this) {
+    ctx.fillStyle = bgColor
+    ctx.fillRect(0, 0, windowW, windowH)
+  }
   render (bgColor: string = this.bgColor) {
-    this.clrscr(this)
+    this.clrscr()
     this.renderMain(this)
     this.renderMask.forEach(mask => {
       mask(this.ctx)

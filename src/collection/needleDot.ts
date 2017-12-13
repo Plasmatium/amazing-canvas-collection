@@ -5,25 +5,26 @@ import { ParticleLike, rebound, distortRoute, randPos, showFPS } from './utils/o
 let random = () => Math.random()
 
 class Dot {
-  pos: ParticleLike['pos']
-  r: number
-  color: number[]
-  dir: ParticleLike['dir']
-  cv: Canvas
+  // pos: ParticleLike['pos']
+  // r: number
+  // color: number[]
+  public dir: ParticleLike['dir']
+  // cv: Canvas
   constructor (
-    pos: ParticleLike['pos'], r: number, color: number[], cv: Canvas) {
-    let dir = {vx: random()*3 - 1.5, vy: random()*3 - 1.5}
-    Object.assign(this, {pos, r, color, cv, dir})
+    public pos: ParticleLike['pos'],
+    public r: number,
+    public color: number[],
+    private cv: Canvas) {
+    this.dir = {vx: random()*3 - 1.5, vy: random()*3 - 1.5}
     // this.color = [Math.floor(128*random() + 100),Math.floor(128*random() + 100),Math.floor(128*random() + 100), random()*0.3 + 0.5]
   }
   mutate () {
     distortRoute(this, this.cv)
     rebound(this, this.cv)
   }
-  draw () {
-    let {ctx, canvas} = this.cv
+  draw ({ctx, canvas} = this.cv) {
     let {pos: {x, y}, r} = this
-    ctx.fillStyle = `rgba(${[...this.color]})`
+    ctx.fillStyle = `rgba(${this.color})`
     ctx.beginPath()
     ctx.arc(x, y, r, 0, 2*Math.PI)
     ctx.closePath()
@@ -38,10 +39,10 @@ class NeedleDotCanvas extends Canvas {
     super (bgColor)
     this.createDots()
   }
-  clrscr ({bgColor, canvas, ctx, windowH, windowW, data}: Canvas) {
-    ctx.fillStyle = bgColor
-    ctx.fillRect(0, 0, windowW, windowH)
-  }
+  // clrscr ({bgColor, canvas, ctx, windowH, windowW, data}: Canvas) {
+  //   ctx.fillStyle = `rgba(255, 255, 255, 0.25)`
+  //   ctx.fillRect(0, 0, windowW, windowH)
+  // }
   createDots () {
     let count = Math.floor(250*this.windowH*this.windowW/(1920*1080))
     let data: Dot[] = this.data = new Array<Dot>(count)
