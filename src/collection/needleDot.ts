@@ -1,48 +1,28 @@
 import Vue from 'vue'
 import { Canvas } from './utils/Canvas'
+import { ParticleLike, rebound, distortRoute, randPos, showFPS } from './utils/others'
 
 let random = () => Math.random()
 
 class Dot {
-  x: number
-  y: number
+  pos: ParticleLike['pos']
   r: number
   color: number[]
-  dir: {vx: number, vy: number}
+  dir: ParticleLike['dir']
   cv: Canvas
   constructor (
-    x: number, y: number, r: number, color: number[], cv: Canvas) {
-    Object.assign(this, {x, y, r, color, cv})
-    this.dir = {vx: random()*3 - 1.5, vy: random()*3 - 1.5}
+    pos: ParticleLike['pos'], r: number, color: number[], cv: Canvas) {
+    let dir = {vx: random()*3 - 1.5, vy: random()*3 - 1.5}
+    Object.assign(this, {pos, r, color, cv, dir})
     // this.color = [Math.floor(128*random() + 100),Math.floor(128*random() + 100),Math.floor(128*random() + 100), random()*0.3 + 0.5]
   }
   mutate () {
-    let {windowH, windowW} = this.cv
-
-    this.dir.vx += Math.sin(this.dir.vx/1000)/1000
-    this.dir.vy += Math.cos(this.dir.vy/1000)/1000
-    this.x += this.dir.vx
-    this.y += this.dir.vy
-
-    if (this.x < 0) {
-      this.x = 0
-      this.dir.vx *= -1
-    } else if (this.x > windowW) {
-      this.x = windowW
-      this.dir.vx *= -1
-    }
-
-    if (this.y < 0) {
-      this.y = 0
-      this.dir.vy *= -1
-    } else if (this.y > windowH) {
-      this.y = windowH
-      this.dir.vy *= -1
-    }
+    distortRoute(this, this.cv)
+    rebound(this, this.cv)
   }
   draw () {
     let {ctx, canvas} = this.cv
-    let {x, y, r} = this
+    let {pos: {x, y}, r} = this
     ctx.fillStyle = `rgba(${[...this.color]})`
     ctx.beginPath()
     ctx.arc(x, y, r, 0, 2*Math.PI)
@@ -62,33 +42,27 @@ class NeedleDotCanvas extends Canvas {
     ctx.fillStyle = bgColor
     ctx.fillRect(0, 0, windowW, windowH)
   }
-  randPos () {
-    let {windowH, windowW} = this
-    let x = random() * windowW
-    let y = random() * windowH
-    return {x, y}
-  }
   createDots () {
     let count = Math.floor(250*this.windowH*this.windowW/(1920*1080))
     let data: Dot[] = this.data = new Array<Dot>(count)
     for (let i = 0; i < count; i++) {
-      let {x, y} = this.randPos()
-      data[i] = new Dot(x, y, 1.62, [0xac, 0xbd, 0xce, 0.62], this as Canvas)
+      let pos = randPos(this)
+      data[i] = new Dot(pos, 1.62, [0xac, 0xbd, 0xce, 0.62], this)
     }
   }
-  render ({canvas, ctx, windowH, windowW, data}: Canvas) {
+  renderMain ({canvas, ctx, windowH, windowW, data}: Canvas) {
     let dThreshold = Math.sqrt(0.618*windowW*windowH/Math.PI)*30
 
     ctx.lineWidth = 0.3
     this.data.forEach((dot, idx) => {
       // lines
       this.data.slice(idx+1).forEach(anotherDot => {
-        let dsqr = ((dot.x-anotherDot.x)**2 + (dot.y-anotherDot.y)**2)
+        let dsqr = ((dot.pos.x-anotherDot.pos.x)**2 + (dot.pos.y-anotherDot.pos.y)**2)
         let a = (1 - dsqr/dThreshold)
         if (a < 0) return
         ctx.beginPath()
-        ctx.moveTo(dot.x, dot.y)
-        ctx.lineTo(anotherDot.x, anotherDot.y)
+        ctx.moveTo(dot.pos.x, dot.pos.y)
+        ctx.lineTo(anotherDot.pos.x, anotherDot.pos.y)
         ctx.closePath()
         ctx.strokeStyle = `rgba(50, 128, 255, ${a})`
         ctx.stroke()
@@ -99,7 +73,7 @@ class NeedleDotCanvas extends Canvas {
   }
   animate ({canvas, ctx, windowH, windowW, data}: Canvas = this) {
     setInterval(() => {
-      this.flush()
+      this.render()
     }, 16)
   }
 }

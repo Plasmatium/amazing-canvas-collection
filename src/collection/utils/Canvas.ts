@@ -1,6 +1,9 @@
+import { showFPS } from "./others";
+
 export abstract class Canvas{
   canvas: HTMLCanvasElement
   ctx: CanvasRenderingContext2D
+  renderMask: {(ctx: CanvasRenderingContext2D): void}[]
   data: any
   constructor (public bgColor: string) {
     let canvas = document.getElementsByTagName('canvas')[0] as HTMLCanvasElement
@@ -10,6 +13,7 @@ export abstract class Canvas{
     let ctx = canvas.getContext('2d')
     if (!ctx) throw Error(`context not found.`)
     this.ctx = ctx
+    this.renderMask = [showFPS()]
     
     window.onresize = e => {
       let target = e.target as (typeof window)
@@ -22,11 +26,14 @@ export abstract class Canvas{
   get windowH () { return this.canvas.height }
   get windowW () { return this.canvas.width }
   abstract clrscr ({bgColor, canvas, ctx, windowH, windowW, data}: Canvas): void
-  abstract render ({canvas, ctx, windowH, windowW, data}: Canvas): void
+  abstract renderMain ({canvas, ctx, windowH, windowW, data}: Canvas): void
   abstract animate ({canvas, ctx, windowH, windowW, data}: Canvas): void
-  flush (bgColor: string = this.bgColor) {
+  render (bgColor: string = this.bgColor) {
     this.clrscr(this)
-    this.render(this)
+    this.renderMain(this)
+    this.renderMask.forEach(mask => {
+      mask(this.ctx)
+    })
   }
 }
 
@@ -41,7 +48,7 @@ class DefaultCanvas extends Canvas {
     ctx.fillStyle = bgColor
     ctx.fillRect(0, 0, windowW, windowH)
   }
-  render ({canvas, ctx, windowH, windowW, data}: Canvas = this) {
+  renderMain ({canvas, ctx, windowH, windowW, data}: Canvas = this) {
     let r = Math.floor((Math.sin(this.step) / 2 + 0.5) * 255)
     let g = Math.floor((Math.sin(this.step + Math.PI*2/3) / 2 + 0.5) * 255)
     let b = Math.floor((Math.sin(this.step - Math.PI*2/3) / 2 + 0.5) * 255)
@@ -52,7 +59,7 @@ class DefaultCanvas extends Canvas {
   }
   animate ({canvas, ctx, windowH, windowW, data}: Canvas = this) {
     setInterval(() => {
-      this.flush(this.bgColor)
+      this.render(this.bgColor)
       this.step += 0.001
     }, 16)
   }
