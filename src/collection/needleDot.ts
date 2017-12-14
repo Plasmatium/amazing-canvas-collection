@@ -1,6 +1,6 @@
 import Vue from 'vue'
 import { Canvas } from './utils/Canvas'
-import { ParticleLike, rebound, distortRoute, randPos, showFPS } from './utils/others'
+import { ParticleLike, rebound, distortRoute, randPos, showFPS, move } from './utils/others'
 
 let random = () => Math.random()
 
@@ -15,11 +15,12 @@ class Dot {
     public r: number,
     public color: number[],
     private cv: Canvas) {
-    this.dir = {vx: random()*3 - 1.5, vy: random()*3 - 1.5}
+    this.dir = {vx: random()*2 - 1, vy: random()*2 - 1}
     // this.color = [Math.floor(128*random() + 100),Math.floor(128*random() + 100),Math.floor(128*random() + 100), random()*0.3 + 0.5]
   }
   mutate () {
     distortRoute(this, this.cv)
+    move(this, {dpx: 1, dpy: 1})
     rebound(this, this.cv)
   }
   draw ({ctx, canvas} = this.cv) {
@@ -73,19 +74,18 @@ class NeedleDotCanvas extends Canvas {
     })
   }
   animate ({canvas, ctx, windowH, windowW, data}: Canvas = this) {
-    setInterval(() => {
-      this.render()
-    }, 16)
+    this.render()
   }
 }
 
 export function needleDot () {
   let cv = new NeedleDotCanvas()
-  cv.animate()
 
   window.onresize = e => {
     let target = e.target as (typeof window)
     cv.canvas.height = target.innerHeight
     cv.canvas.width = target.innerWidth
   }
+
+  return cv
 }

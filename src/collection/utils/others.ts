@@ -18,49 +18,63 @@ export interface LinearGradient {
   y0: number
   x1: number
   y1: number
-  colorArray: string[]
+  colorInfoArr: {
+    offset: number
+    color: string
+  }[]
+}
+
+// Standard Normal variate using Box-Muller transform.
+// ref: https://stackoverflow.com/questions/25582882/javascript-math-random-normal-distribution-gaussian-bell-curve
+function randn_bm() {
+  var u = 0, v = 0;
+  while(u === 0) u = Math.random(); //Converting [0,1) to (0,1)
+  while(v === 0) v = Math.random();
+  return Math.sqrt( -2.0 * Math.log( u ) ) * Math.cos( 2.0 * Math.PI * v );
 }
 
 export function makeLinearGradient(
   ctx: CanvasRenderingContext2D,
-  {x0, y0, x1, y1, colorArray}: LinearGradient
+  {x0, y0, x1, y1, colorInfoArr}: LinearGradient
 ) {
   let gradient = ctx.createLinearGradient(x0, y0, x1, y1)
-  colorArray.forEach((color, idx) => {
-    gradient.addColorStop(idx, color)
+  colorInfoArr.forEach((colorInfo, idx) => {
+    let {offset, color} = colorInfo
+    gradient.addColorStop(offset, color)
   })
   return gradient
 }
 
 export function rebound(
   {pos, dir}: ParticleLike,
-  {windowH, windowW}: Canvas
+  {windowH, windowW}: Canvas,
+  decay = {dcx: 1, dcy: 1}
 ) {
   if (pos.x < 0) {
     pos.x = 0
-    dir.vx *= -1
+    dir.vx *= -decay.dcx
   } else if (pos.x > windowW) {
     pos.x = windowW
-    dir.vx *= -1
+    dir.vx *= -decay.dcx
   }
 
   if (pos.y < 0) {
     pos.y = 0
-    dir.vy *= -1
+    dir.vy *= -decay.dcy
   } else if (pos.y > windowH) {
     pos.y = windowH
-    dir.vy *= -1
+    dir.vy *= -decay.dcy
   }
 }
 
+let distortStep = 0
 export function distortRoute(
   {pos, dir}: ParticleLike,
   {windowH, windowW}: Canvas
 ) {
-  dir.vx += Math.sin(dir.vx/1000)/1000
-  dir.vy += Math.cos(dir.vy/1000)/1000
-  pos.x += dir.vx
-  pos.y += dir.vy
+  dir.vx *= Math.sin(distortStep)*0.03 + 1
+  dir.vy *= Math.cos(distortStep)*0.03 + 1
+  distortStep += 0.01
 }
 
 export function randPos ({windowH, windowW}: {
@@ -96,9 +110,21 @@ export function showFPS () {
   return renderFPS
 }
 
-export function gravityFall (
+export function applyGravity (
   {pos, dir}: ParticleLike,
-  {windowW, windowH}: Canvas
+  {windowW, windowH}: Canvas,
+  g = 5
 ) {
-  
+  dir.vy += g
+}
+
+export function move (
+  {pos, dir}: ParticleLike,
+  damping = {dpx: 0.96, dpy: 0.96}
+) {
+  pos.x += dir.vx
+  pos.y += dir.vy
+
+  dir.vx *= damping.dpx
+  dir.vy *= damping.dpy
 }

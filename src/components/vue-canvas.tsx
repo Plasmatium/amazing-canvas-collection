@@ -1,11 +1,18 @@
 import Vue from 'vue'
 import * as util from 'util'
+import { Canvas } from '../collection/utils/Canvas'
 
-export function makeCanvas(script: Function) {
+export function makeCanvas(script: () => Canvas) {
   return Vue.extend({
     name: 'vue-canvas',
+    computed: {
+      cv () { return script() }
+    },
     mounted () {
-      script()
+      this.cv.run()
+    },
+    destroyed () {
+      this.cv.destory()
     },
     render () {
       let height = window.innerHeight
@@ -14,4 +21,4 @@ export function makeCanvas(script: Function) {
       return <canvas height={height} width={width} style={style}>canvas is not support</canvas>
     }
   })
-} 
+}

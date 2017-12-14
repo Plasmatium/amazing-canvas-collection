@@ -1,9 +1,11 @@
 import { showFPS } from "./others";
+import { clearInterval } from "timers";
 
 export abstract class Canvas{
   canvas: HTMLCanvasElement
   ctx: CanvasRenderingContext2D
   renderMask: {(ctx: CanvasRenderingContext2D): void}[]
+  timerID: number
   data: any
   constructor (public bgColor: string | CanvasGradient) {
     let canvas = document.getElementsByTagName('canvas')[0] as HTMLCanvasElement
@@ -38,6 +40,12 @@ export abstract class Canvas{
       mask(this.ctx)
     })
   }
+  run () {
+    this.timerID = window.setInterval(() => this.animate(this), 16)
+  }
+  destory () {
+    window.clearInterval(this.timerID)
+  }
 }
 
 class DefaultCanvas extends Canvas {
@@ -61,14 +69,11 @@ class DefaultCanvas extends Canvas {
     ctx.strokeText('default canvas', 100, 100)
   }
   animate ({canvas, ctx, windowH, windowW, data}: Canvas = this) {
-    setInterval(() => {
-      this.render(this.bgColor)
-      this.step += 0.001
-    }, 16)
+    this.render(this.bgColor)
+    this.step += 0.001
   }
 }
 
 export function defaultCanvas () {
-  const cv = new DefaultCanvas('#eaeaea')
-  cv.animate()
+  return new DefaultCanvas('#eaeaea')
 }
