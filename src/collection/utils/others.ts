@@ -95,3 +95,10 @@ export function showFPS () {
 
   return renderFPS
 }
+
+export function gravityFall (
+  {pos, dir}: ParticleLike,
+  {windowW, windowH}: Canvas
+) {
+  
+}
