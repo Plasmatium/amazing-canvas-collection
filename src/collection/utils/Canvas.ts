@@ -5,7 +5,7 @@ export abstract class Canvas{
   ctx: CanvasRenderingContext2D
   renderMask: {(ctx: CanvasRenderingContext2D): void}[]
   data: any
-  constructor (public bgColor: string) {
+  constructor (public bgColor: string | CanvasGradient) {
     let canvas = document.getElementsByTagName('canvas')[0] as HTMLCanvasElement
     if (!canvas) throw Error(`canvas not found.`)
     this.canvas = canvas
@@ -28,7 +28,7 @@ export abstract class Canvas{
   abstract clrscr ({bgColor, canvas, ctx, windowH, windowW, data}: Canvas): void
   abstract renderMain ({canvas, ctx, windowH, windowW, data}: Canvas): void
   abstract animate ({canvas, ctx, windowH, windowW, data}: Canvas): void
-  render (bgColor: string = this.bgColor) {
+  render (bgColor = this.bgColor) {
     this.clrscr(this)
     this.renderMain(this)
     this.renderMask.forEach(mask => {

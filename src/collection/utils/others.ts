@@ -13,6 +13,25 @@ export interface ParticleLike {
   }
 }
 
+export interface LinearGradient {
+  x0: number
+  y0: number
+  x1: number
+  y1: number
+  colorArray: string[]
+}
+
+export function makeLinearGradient(
+  ctx: CanvasRenderingContext2D,
+  {x0, y0, x1, y1, colorArray}: LinearGradient
+) {
+  let gradient = ctx.createLinearGradient(x0, y0, x1, y1)
+  colorArray.forEach((color, idx) => {
+    gradient.addColorStop(idx, color)
+  })
+  return gradient
+}
+
 export function rebound(
   {pos, dir}: ParticleLike,
   {windowH, windowW}: Canvas
