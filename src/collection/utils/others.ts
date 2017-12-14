@@ -26,11 +26,12 @@ export interface LinearGradient {
 
 // Standard Normal variate using Box-Muller transform.
 // ref: https://stackoverflow.com/questions/25582882/javascript-math-random-normal-distribution-gaussian-bell-curve
-function randn_bm() {
+export function randn_bm() {
   var u = 0, v = 0;
-  while(u === 0) u = Math.random(); //Converting [0,1) to (0,1)
-  while(v === 0) v = Math.random();
-  return Math.sqrt( -2.0 * Math.log( u ) ) * Math.cos( 2.0 * Math.PI * v );
+  //Converting [0,1) to (0,1)
+  while(u === 0) u = Math.random()
+  while(v === 0) v = Math.random()
+  return Math.sqrt( -2.0 * Math.log( u ) ) * Math.cos( 2.0 * Math.PI * v )
 }
 
 export function makeLinearGradient(
@@ -67,14 +68,17 @@ export function rebound(
   }
 }
 
-let distortStep = 0
 export function distortRoute(
   {pos, dir}: ParticleLike,
   {windowH, windowW}: Canvas
 ) {
-  dir.vx *= Math.sin(distortStep)*0.03 + 1
-  dir.vy *= Math.cos(distortStep)*0.03 + 1
-  distortStep += 0.01
+  let randx = Infinity
+  let randy = Infinity
+  // make random in (-10, 10)
+  while(Math.abs(randx) > 10) randx = randn_bm()
+  while(Math.abs(randy) > 10) randy = randn_bm()
+  dir.vx += randx * 0.01
+  dir.vy += randy * 0.01
 }
 
 export function randPos ({windowH, windowW}: {
@@ -113,14 +117,14 @@ export function showFPS () {
 export function applyGravity (
   {pos, dir}: ParticleLike,
   {windowW, windowH}: Canvas,
-  g = 5
+  g = 1
 ) {
   dir.vy += g
 }
 
 export function move (
   {pos, dir}: ParticleLike,
-  damping = {dpx: 0.96, dpy: 0.96}
+  damping = {dpx: 0.98, dpy: 0.98}
 ) {
   pos.x += dir.vx
   pos.y += dir.vy

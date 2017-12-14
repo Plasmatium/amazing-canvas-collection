@@ -7,8 +7,8 @@ const os = require('os')
 
 let network = os.networkInterfaces()
 for (let k in network) {
-  // network[k].forEach(net => net.family === 'IPv4' && !net.address.includes('127') && (process.env.host = net.address))
-  process.env.host = 'localhost'
+  network[k].forEach(net => net.family === 'IPv4' && !net.address.includes('127') && (process.env.host = net.address))
+  // process.env.host = 'localhost'
 }
 
 module.exports = {
