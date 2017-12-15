@@ -13,6 +13,13 @@ export interface ParticleLike {
   }
 }
 
+export interface Boundary {
+  top: number
+  bottom: number
+  left: number
+  right: number
+}
+
 export interface LinearGradient {
   x0: number
   y0: number
@@ -48,22 +55,22 @@ export function makeLinearGradient(
 
 export function rebound(
   {pos, dir}: ParticleLike,
-  {windowH, windowW}: Canvas,
+  {top, bottom, left, right}: Boundary,
   decay = {dcx: 1, dcy: 1}
 ) {
-  if (pos.x < 0) {
-    pos.x = 0
+  if (pos.x < left) {
+    pos.x = left
     dir.vx *= -decay.dcx
-  } else if (pos.x > windowW) {
-    pos.x = windowW
+  } else if (pos.x > right) {
+    pos.x = right
     dir.vx *= -decay.dcx
   }
 
-  if (pos.y < 0) {
-    pos.y = 0
+  if (pos.y < top) {
+    pos.y = top
     dir.vy *= -decay.dcy
-  } else if (pos.y > windowH) {
-    pos.y = windowH
+  } else if (pos.y > bottom) {
+    pos.y = bottom
     dir.vy *= -decay.dcy
   }
 }
@@ -122,13 +129,40 @@ export function applyGravity (
   dir.vy += g
 }
 
+function calcDamping (v: number ) {
+  if (Math.abs(v) > 100) return 1
+  if (Math.abs(v) < 0.5) return 0
+  return 0.01*v
+}
 export function move (
   {pos, dir}: ParticleLike,
-  damping = {dpx: 0.98, dpy: 0.98}
+  damping = false
 ) {
   pos.x += dir.vx
   pos.y += dir.vy
 
-  dir.vx *= damping.dpx
-  dir.vy *= damping.dpy
+  if (!damping) return
+  // dir.vx *= damping.dpx
+  // dir.vy *= damping.dpy
+  dir.vx -= calcDamping(dir.vx)
+  dir.vy -= calcDamping(dir.vy)
+}
+
+export function applyFriction(dir: ParticleLike['dir'], a: number) {
+  let signx = Math.sign(dir.vx)
+  dir.vx = Math.abs(dir.vx) - a < 0 ? 0 : dir.vx - signx * a
+
+  let signy = Math.sign(dir.vy)
+  dir.vy = Math.abs(dir.vy) - a < 0 ? 0 : dir.vy - signx * a
+}
+
+export function earthFricion(
+  {pos, dir}: ParticleLike,
+  m: number, // m for mass
+  horizon: number,
+  k = 0.1
+) {
+  if (pos.y < horizon) return
+  let a = m * k
+  applyFriction(dir, a)
 }

@@ -20,8 +20,9 @@ class Dot {
   }
   mutate () {
     distortRoute(this, this.cv)
-    move(this, {dpx: 1, dpy: 1})
-    rebound(this, this.cv)
+    move(this)
+    let {windowW, windowH} = this.cv
+    rebound(this, {top: 0, bottom: windowH, left: 0, right: windowW})
   }
   draw ({ctx, canvas} = this.cv) {
     let {pos: {x, y}, r} = this
