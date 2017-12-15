@@ -46,6 +46,7 @@ export abstract class Canvas{
   destory () {
     window.clearInterval(this.timerID)
   }
+  onClick (e: MouseEvent) {  }
 }
 
 class DefaultCanvas extends Canvas {

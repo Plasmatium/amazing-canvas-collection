@@ -47,43 +47,60 @@ class Donut {
   }
 }
 
+function isValid (arr: any[]) {
+  for(let m of arr) {
+    if (m) return true
+  }
+  return false
+}
 class ColorfulDonut extends Canvas {
-  public data: Donut[] = []
+  public data: Set<Donut[]> = new Set()
   // public step: number = 0
   constructor (public bgColor: string | CanvasGradient = "#eacdae") {
     super(bgColor)
   }
   renderMain ({canvas, ctx, windowH, windowW, data}: Canvas = this) {
-    this.data.forEach((donut, idx) => {
+    this.data.forEach(dataGroup => {
+      if (!isValid(dataGroup)) {
+        this.data.delete(dataGroup)
+        return
+      }
+      dataGroup.forEach((donut, idx) => {
       // if (idx > this.step) return
       if (!donut) return
       if (donut.isDead) {
-        delete this.data[idx]
+        delete dataGroup[idx]
         return
       }
       donut.draw()
+      })
     })
-    // this.step += 1
   }
   animate ({canvas, ctx, windowH, windowW, data}: Canvas = this) {
     this.render()
   }
   
-  addData () {
+  addData (x?: number, y?: number) {
     let {windowH, windowW} = this
     let count = windowH * windowW / (1920*1080) * 150
     let ret = []
     for (let i = 0; i < count; i++) {
       let randColor = [255, 255, 255].map(c => Math.floor(c * Math.random()))
       ret.push(new Donut(
-        {x: windowW/2, y: windowH*0.618},
+        // careful, **DO NOT USE** `pos` as an object,
+        // or all particle will act on the same pos object
+        {x: x || windowW/2, y: y || windowH*0.618},
         {vx: randn_bm()*10, vy: -Math.abs(randn_bm()*15)},
         Math.abs(randn_bm()*10+3), Math.abs(randn_bm()*6.2+3.1),
         [...randColor, 1.0], 
         this
       ))
     }
-    this.data = ret
+    this.data.add(ret)
+  }
+  onClick (e: MouseEvent) {
+    let {x, y} = e
+    this.addData(x, y)
   }
 }
 

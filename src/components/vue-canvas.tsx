@@ -18,7 +18,15 @@ export function makeCanvas(script: () => Canvas) {
       let height = window.innerHeight
       let width = window.innerWidth
       let style = {position: 'fixed', top: 0, left: 0, 'z-index': -1}
-      return <canvas height={height} width={width} style={style}>canvas is not support</canvas>
+      // when below is running, this.cv in computed is not calculated.
+      let handleClick = (e: MouseEvent) => this.cv.onClick(e)
+      return (<canvas 
+        onClick={handleClick}
+        height={height}
+        width={width}
+        style={style}>
+        canvas is not support
+      </canvas>)
     }
   })
 }
