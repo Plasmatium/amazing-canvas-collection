@@ -1,4 +1,3 @@
-import Vue from 'vue'
 import { Canvas } from './utils/Canvas'
 import { ParticleLike, rebound, distortRoute, randPos, showFPS, move } from './utils/others'
 

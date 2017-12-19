@@ -86,9 +86,6 @@ class ColorfulDonut extends Canvas {
       })
     })
   }
-  animate ({canvas, ctx, windowH, windowW, data}: Canvas = this) {
-    this.render()
-  }
   
   addData (x?: number, y?: number) {
     let {windowH, windowW} = this
