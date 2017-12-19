@@ -1,12 +1,24 @@
 import {Canvas} from './utils/Canvas'
-import {ParticleLike} from './utils/others'
+import {ParticleLike, randColor} from './utils/others'
+
+
+
+class Dot {
+  constructor (
+    public pos: ParticleLike['pos'],
+    public dir: ParticleLike['dir'],
+    public color: number[]
+  ) {
+
+  }
+}
 
 class TextParticle extends Canvas {
   constructor (public bgColor: string | CanvasGradient = "#eacdae") {
     super(bgColor)
   }
   renderMain ({canvas, ctx, windowH, windowW, data}: Canvas = this) {
-    ctx.fillStyle = '#777'
+    ctx.fillStyle = `#777`
     ctx.fillText('test text', 150, 150)
   }
   onClick (e: MouseEvent) {

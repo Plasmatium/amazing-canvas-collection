@@ -1,6 +1,6 @@
 import { Canvas } from "./Canvas"
 
-let {random, sin, cos, tan, PI} = Math
+let {floor, random, sin, cos, tan, PI} = Math
 
 export interface ParticleLike {
   pos: {
@@ -95,6 +95,10 @@ export function randPos ({windowH, windowW}: {
   let x = random() * windowW
   let y = random() * windowH
   return {x, y}
+}
+
+export function randColor () {
+  return [0xff, 0xff, 0xff, 0xff].map(v => floor(random()*v))
 }
 
 export function showFPS () {
