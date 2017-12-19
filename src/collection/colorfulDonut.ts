@@ -89,18 +89,18 @@ class ColorfulDonut extends Canvas {
   
   addData (x?: number, y?: number) {
     let {windowH, windowW} = this
-    let count = windowH * windowW / (1920*1080) * 150
+    let count = windowH * windowW / (1920*1080) * 90
     let ret = []
     for (let i = 0; i < count; i++) {
       let randColor = [255, 255, 255].map(c => Math.floor(c * Math.random()))
       let r: number = 0
-      while (r < 5) r = Math.abs(randn_bm() * 10 + 5)
+      while (r < 5) r = Math.abs(randn_bm() * 5 + 10)
       ret.push(new Donut(
         // careful, **DO NOT USE** `pos` as an object,
         // or all particle will act on the same pos object
         {x: x || windowW/2, y: y || windowH*0.618},
         {vx: randn_bm()*10, vy: -Math.abs(randn_bm()*25)},
-        r, Math.abs(randn_bm()*6.2+3.1),
+        r, Math.abs(randn_bm()*3.1+3.1),
         [...randColor, 1.0], 
         this
       ))

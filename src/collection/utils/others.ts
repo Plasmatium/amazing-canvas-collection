@@ -2,6 +2,7 @@ import { Canvas } from "./Canvas"
 
 let {floor, random, sin, cos, tan, PI} = Math
 
+// ------utils--------
 export interface ParticleLike {
   pos: {
     x: number
@@ -53,41 +54,6 @@ export function makeLinearGradient(
   return gradient
 }
 
-export function rebound(
-  {pos, dir}: ParticleLike,
-  {top, bottom, left, right}: Boundary,
-  decay = {dcx: 1, dcy: 1}
-) {
-  if (pos.x < left) {
-    pos.x = left
-    dir.vx *= -decay.dcx
-  } else if (pos.x > right) {
-    pos.x = right
-    dir.vx *= -decay.dcx
-  }
-
-  if (pos.y < top) {
-    pos.y = top
-    dir.vy *= -decay.dcy
-  } else if (pos.y > bottom) {
-    pos.y = bottom
-    dir.vy *= -decay.dcy
-  }
-}
-
-export function distortRoute(
-  {pos, dir}: ParticleLike,
-  {windowH, windowW}: Canvas
-) {
-  let randx = Infinity
-  let randy = Infinity
-  // make random in (-10, 10)
-  while(Math.abs(randx) > 10) randx = randn_bm()
-  while(Math.abs(randy) > 10) randy = randn_bm()
-  dir.vx += randx * 0.01
-  dir.vy += randy * 0.01
-}
-
 export function randPos ({windowH, windowW}: {
   windowH: number
   windowW: number
@@ -123,6 +89,76 @@ export function showFPS () {
   }
 
   return renderFPS
+}
+
+export class RefinedImageData {
+  public data: Uint16Array
+  constructor (public readonly srcData: ImageData) {}
+  refine (filter: (color: number[]) => boolean) {
+    let {width, height} = this.srcData
+    let rawRet = new Uint16Array(width*height*2)
+    let validLength = 0
+    for (let i = 0; i < width*height; i++) {
+      // let color = this.srcData.data.subarray(i*4, i*4 + 4)
+      let d = this.srcData.data
+      let idx = i*4
+      let color = [d[idx], d[idx+1], d[idx+2], d[idx+3]]
+      if (!filter(color)) { continue }
+      // debugger
+      let x = i % width
+      let y = i / width
+      // subarray is very very slow
+      // rawRet.subarray(validLength, validLength+2).set([x, y])
+      rawRet[validLength] = x
+      rawRet[validLength+1] = y
+      validLength += 2
+    }
+    this.data = rawRet.subarray(0, validLength*2)
+  }
+  getColor({x, y}: ParticleLike['pos']) {
+    let idx = 4*(x*this.width + y)
+    let color = this.srcData.data.subarray(idx, idx + 4)
+    return color
+  }
+  get width () { return this.srcData.width }
+  get height () { return this.srcData.height }
+}
+
+
+// -------physical-----------
+export function rebound(
+  {pos, dir}: ParticleLike,
+  {top, bottom, left, right}: Boundary,
+  decay = {dcx: 1, dcy: 1}
+) {
+  if (pos.x < left) {
+    pos.x = left
+    dir.vx *= -decay.dcx
+  } else if (pos.x > right) {
+    pos.x = right
+    dir.vx *= -decay.dcx
+  }
+
+  if (pos.y < top) {
+    pos.y = top
+    dir.vy *= -decay.dcy
+  } else if (pos.y > bottom) {
+    pos.y = bottom
+    dir.vy *= -decay.dcy
+  }
+}
+
+export function distortRoute(
+  {pos, dir}: ParticleLike,
+  {windowH, windowW}: Canvas
+) {
+  let randx = Infinity
+  let randy = Infinity
+  // make random in (-10, 10)
+  while(Math.abs(randx) > 10) randx = randn_bm()
+  while(Math.abs(randy) > 10) randy = randn_bm()
+  dir.vx += randx * 0.01
+  dir.vy += randy * 0.01
 }
 
 export function applyGravity (
