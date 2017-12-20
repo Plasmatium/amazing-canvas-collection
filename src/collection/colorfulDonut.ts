@@ -118,8 +118,8 @@ export function colorfulDonut () {
   let {windowH} = cv
   let colorInfoArr = [
     {offset: 0.0, color: '#eacdae'},
-    {offset: 0.9, color: '#ededed'},
-    {offset: 0.905, color: '#b8afae'},
+    {offset: 0.9, color: '#fefeef'},
+    {offset: 0.909, color: '#777'},
     {offset: 0.91, color: '#eacdae'},
     {offset: 1.0, color: '#eacdae'}
   ]

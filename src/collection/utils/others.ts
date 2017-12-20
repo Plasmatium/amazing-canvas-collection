@@ -74,7 +74,7 @@ export function showFPS () {
   function renderFPS (ctx: CanvasRenderingContext2D) {
     count++
     ctx.fillStyle = 'green'
-    ctx.font = '24px Sans'
+    ctx.font = '24px helvetica, sans'
     if (count !== 100) {
       ctx.fillText(`FPS: ${fps}`, 10, 50)
       return
