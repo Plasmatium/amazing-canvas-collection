@@ -116,8 +116,9 @@ export class RefinedImageData {
     this.data = rawRet.subarray(0, validLength*2)
   }
   getColor({x, y}: ParticleLike['pos']) {
-    let idx = 4*(x*this.width + y)
-    let color = this.srcData.data.subarray(idx, idx + 4)
+    let idx = 4*(y*this.width + x)
+    let d = this.srcData.data
+    let color = [d[idx], d[idx+1], d[idx+2], d[idx+3]]
     return color
   }
   get width () { return this.srcData.width }
@@ -205,4 +206,13 @@ export function earthFricion(
   if (pos.y < horizon) return
   let a = m * k
   applyFriction(dir, a)
+}
+
+export function slide (
+  pos: ParticleLike['pos'],
+  dest: ParticleLike['pos'],
+  k = 0.1
+) {
+  pos.x += (dest.x - pos.x) * k
+  pos.y += (dest.y - pos.y) * k
 }
