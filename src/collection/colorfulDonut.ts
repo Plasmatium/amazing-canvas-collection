@@ -89,7 +89,7 @@ class ColorfulDonut extends Canvas {
   
   addData (x?: number, y?: number) {
     let {windowH, windowW} = this
-    let count = windowH * windowW / (1920*1080) * 90
+    let count = windowH * windowW / (1920*1080) * 30
     let ret = []
     for (let i = 0; i < count; i++) {
       let randColor = [255, 255, 255].map(c => Math.floor(c * Math.random()))

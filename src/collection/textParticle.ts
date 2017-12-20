@@ -82,6 +82,8 @@ export function textParticle () {
     return str !== cv.bgColor && Math.random() < hitChance
   }
   let refinedData = new RefinedImageData(ctx.getImageData(200 + offset, 150, 200, 60))
+  // hide this pre-render text
+  cv.clrscr()
   refinedData.refine(filter)
   for (let i = 0; i < refinedData.data.length; i += 2) {
     let d = refinedData.data
@@ -90,7 +92,7 @@ export function textParticle () {
     let dot = new Dot({
       x: Math.random()* 50 + cv.windowW / 2,
       y: -Math.random()* 20 + cv.windowH
-    }, {x: x + 150, y: y + 150}, color, cv)
+    }, {x: x*2 + 150, y: y*2 + 150}, color, cv)
     cv.dots.push(dot)
   }
 
