@@ -1,5 +1,4 @@
 import { showFPS } from "./others";
-import { clearInterval } from "timers";
 
 export abstract class Canvas{
   canvas: HTMLCanvasElement
@@ -28,12 +27,11 @@ export abstract class Canvas{
   get windowH () { return this.canvas.height }
   get windowW () { return this.canvas.width }
   abstract renderMain ({canvas, ctx, windowH, windowW, data}: Canvas): void
-  abstract animate ({canvas, ctx, windowH, windowW, data}: Canvas): void
   clrscr ({bgColor, canvas, ctx, windowH, windowW, data}: Canvas = this) {
     ctx.fillStyle = bgColor
     ctx.fillRect(0, 0, windowW, windowH)
   }
-  render (bgColor = this.bgColor) {
+  render () {
     this.clrscr()
     this.renderMain(this)
     this.renderMask.forEach(mask => {
@@ -41,7 +39,7 @@ export abstract class Canvas{
     })
   }
   run () {
-    this.timerID = window.setInterval(() => this.animate(this), 16)
+    this.timerID = window.setInterval(() => this.render(), 16)
   }
   destory () {
     window.clearInterval(this.timerID)
@@ -70,7 +68,7 @@ class DefaultCanvas extends Canvas {
     ctx.strokeText('default canvas', 100, 100)
   }
   animate ({canvas, ctx, windowH, windowW, data}: Canvas = this) {
-    this.render(this.bgColor)
+    this.render()
     this.step += 0.001
   }
 }

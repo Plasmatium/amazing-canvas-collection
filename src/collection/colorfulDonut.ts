@@ -1,5 +1,5 @@
 import { Canvas } from "./utils/Canvas"
-import { ParticleLike, makeLinearGradient, applyGravity, rebound, move, randn_bm } from "./utils/others"
+import { ParticleLike, makeLinearGradient, applyGravity, rebound, move, randn_bm, earthFricion } from "./utils/others"
 
 class Donut {
   isSlow: boolean
@@ -18,8 +18,18 @@ class Donut {
   mutate () {
     let {pos, dir} = this
     applyGravity(this, this.cv)
-    move(this)
-    rebound(this, this.cv, {dcx: 0.9, dcy: 0.8})
+    move(this, true)
+
+    let {windowW, windowH} = this.cv
+    let bottom: number
+    if (this.isSlow) bottom = windowH
+    else bottom = windowH*0.9
+    rebound(
+      this,
+      {top: -Infinity, bottom, left: 0, right: windowW}
+    ) 
+    earthFricion(this, this.r*0.05, bottom)
+
     this.fade()
   }
   draw ({ctx, canvas} = this.cv) {
@@ -42,7 +52,7 @@ class Donut {
       return
     }
     let [r, g, b, a] = this.color
-    if (a < 1e-3) { this.isDead = true }
+    if (a < 1/255) { this.isDead = true }
     this.color = [r, g, b, a*0.9]
   }
 }
@@ -76,22 +86,21 @@ class ColorfulDonut extends Canvas {
       })
     })
   }
-  animate ({canvas, ctx, windowH, windowW, data}: Canvas = this) {
-    this.render()
-  }
   
   addData (x?: number, y?: number) {
     let {windowH, windowW} = this
-    let count = windowH * windowW / (1920*1080) * 150
+    let count = windowH * windowW / (1920*1080) * 30
     let ret = []
     for (let i = 0; i < count; i++) {
       let randColor = [255, 255, 255].map(c => Math.floor(c * Math.random()))
+      let r: number = 0
+      while (r < 5) r = Math.abs(randn_bm() * 5 + 10)
       ret.push(new Donut(
         // careful, **DO NOT USE** `pos` as an object,
         // or all particle will act on the same pos object
         {x: x || windowW/2, y: y || windowH*0.618},
-        {vx: randn_bm()*10, vy: -Math.abs(randn_bm()*15)},
-        Math.abs(randn_bm()*10+3), Math.abs(randn_bm()*6.2+3.1),
+        {vx: randn_bm()*10, vy: -Math.abs(randn_bm()*25)},
+        r, Math.abs(randn_bm()*3.1+3.1),
         [...randColor, 1.0], 
         this
       ))
@@ -109,8 +118,9 @@ export function colorfulDonut () {
   let {windowH} = cv
   let colorInfoArr = [
     {offset: 0.0, color: '#eacdae'},
-    {offset: 0.9, color: '#ededed'},
-    {offset: 0.9, color: '#eacdae'},
+    {offset: 0.9, color: '#fefeef'},
+    {offset: 0.909, color: '#777'},
+    {offset: 0.91, color: '#eacdae'},
     {offset: 1.0, color: '#eacdae'}
   ]
   let gradientOption = {

@@ -9,7 +9,7 @@ let network = os.networkInterfaces()
 for (let k in network) {
   network[k].forEach(net => net.family === 'IPv4' && !net.address.includes('127') && (process.env.host = net.address))
   // process.env.host = 'localhost'
-  if (!process.env.host.startsWith('192')) process.env.host = 'localhost'
+  if (process.env.host && !process.env.host.startsWith('192')) process.env.host = 'localhost'
 }
 
 module.exports = {
