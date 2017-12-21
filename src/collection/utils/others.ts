@@ -32,6 +32,16 @@ export interface LinearGradient {
   }[]
 }
 
+export type colorArray = [number, number, number, number]
+
+export interface TransferParam {
+  size: number
+  type: number
+  normalize: boolean
+  stride: number
+  offset: number
+}
+
 // Standard Normal variate using Box-Muller transform.
 // ref: https://stackoverflow.com/questions/25582882/javascript-math-random-normal-distribution-gaussian-bell-curve
 export function randn_bm() {

@@ -1,8 +1,9 @@
 import Vue from 'vue'
 import * as util from 'util'
 import { Canvas } from '../collection/utils/Canvas'
+import { GLScene } from '../collection/utils/WebGL';
 
-export function makeCanvas(script: () => Canvas) {
+export function makeCanvas(script: () => Canvas | GLScene) {
   return Vue.extend({
     name: 'vue-canvas',
     computed: {

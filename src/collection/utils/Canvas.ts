@@ -1,5 +1,4 @@
 import { showFPS } from "./others";
-import { clearInterval } from "timers";
 
 export abstract class Canvas{
   canvas: HTMLCanvasElement
