@@ -125,6 +125,16 @@ export class RefinedImageData {
   get height () { return this.srcData.height }
 }
 
+// use typed array stands for a batch of dots,
+// properties on a dot: [color, pos, dir, acc] share memory
+export class BufferDots {
+  private buffer: Uint32Array
+  constructor (public readonly count: number) {
+    this.buffer = new Uint32Array(count*9)
+  }
+  // this **SHOULD BE** implemented by webgl & glsl,
+  // not in js class
+}
 
 // -------physical-----------
 export function rebound(
