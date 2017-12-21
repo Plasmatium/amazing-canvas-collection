@@ -2,7 +2,7 @@ import { TransferParam } from "./others";
 
 export class GLProg {
   public program: WebGLProgram
-  public attrLocs: { [variableName: string]: number }
+  public attrLocs: { [variableName: string]: number } = {}
   constructor (vsSrc: string, fsSrc: string, protected gl: WebGLRenderingContext) {
     this.makeProgram(vsSrc, fsSrc)
   }
@@ -57,14 +57,14 @@ export class GLProg {
     let {gl} = this
     let attrLoc = this.attrLocs[attrName]
     gl.enableVertexAttribArray(attrLoc)
-    gl.bindBuffer(gl.ARRAY_BUFFER, attrLoc)
+    // gl.bindBuffer(gl.ARRAY_BUFFER, buffer)
     gl.vertexAttribPointer(attrLoc, size, type, normalize, stride, offset)
   }
 }
 
 export abstract class GLScene {
-  protected glPrograms: { [progName: string]: GLProg }
-  protected bufferPool: { [bufferName: string]: WebGLBuffer }
+  protected glPrograms: { [progName: string]: GLProg } = {}
+  protected bufferPool: { [bufferName: string]: WebGLBuffer } = {}
   public canvas: HTMLCanvasElement
   public gl: WebGLRenderingContext
   timer: number
