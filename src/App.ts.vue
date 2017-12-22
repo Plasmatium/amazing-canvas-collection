@@ -52,6 +52,8 @@ export default Vue.extend({
 .menu-container {
   display: flex;
   flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
 
   margin: .4em;
 }
@@ -71,7 +73,7 @@ export default Vue.extend({
 }
 
 .script-link:hover {
-  background-color: #ffffffaa;
+  background-color: #ffffff77;
   box-shadow: 0 8px 16px 0 #0000001a;
 }
 .script-link:active {
