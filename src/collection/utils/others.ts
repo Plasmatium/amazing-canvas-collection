@@ -84,9 +84,9 @@ export function showFPS () {
   function renderFPS (ctx: CanvasRenderingContext2D) {
     count++
     ctx.fillStyle = 'green'
-    ctx.font = '24px helvetica, sans'
+    ctx.font = '12px helvetica, sans'
     if (count !== 100) {
-      ctx.fillText(`FPS: ${fps}`, 10, 50)
+      ctx.fillText(`FPS: ${fps}`, 10, 20)
       return
     }
     count = 0
@@ -95,7 +95,7 @@ export function showFPS () {
     let diffTime = (currTime-prevTime) / 1000
     prevTime = currTime
     fps = (100 / diffTime).toFixed(1)
-    ctx.fillText(`FPS: ${fps}`, 10, 50)
+    ctx.fillText(`FPS: ${fps}`, 10, 20)
   }
 
   return renderFPS

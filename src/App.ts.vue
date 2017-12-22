@@ -1,10 +1,14 @@
 <template>
   <div id="app">
-    <ul>
-      <li class="script-link" v-for="link in links" :key="link">
-        <router-link :to="link">{{link}}</router-link>
-      </li>
-    </ul>
+    <div class="menu-container">
+      <router-link
+      class="script-link"
+      v-for="link in links"
+      :key="link"
+      :to="link">
+        <span>{{link}}</span>
+      </router-link>
+    </div>
     <router-view />
   </div>
 </template>
@@ -44,8 +48,38 @@ export default Vue.extend({
   text-align: center;
   color: #2c3e50;
 }
+
+.menu-container {
+  display: flex;
+  flex-wrap: wrap;
+
+  margin: .4em;
+}
 .script-link {
-  display: inline;
-  margin: 0 0.62rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  width: 10em;
+  height: 3.3em;
+  margin: 0.6em;
+
+  cursor: pointer;
+  font-size: 1rem;
+  border-radius: .16em;
+  transition: 150ms all
+}
+
+.script-link:hover {
+  background-color: #ffffffaa;
+  box-shadow: 0 8px 16px 0 #0000001a;
+}
+.script-link:active {
+  box-shadow: 0 1px 2px 0 #0000001a;
+}
+
+a {
+  text-decoration: none;
+  color: #2c3e50;
 }
 </style>
