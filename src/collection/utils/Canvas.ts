@@ -56,7 +56,9 @@ class DefaultCanvas extends Canvas {
     super(bgColor)
     let {windowH} = this
     let phase = random()*6.2832
-    this.curves = [1,3,5,7,9,11].map(order => {
+
+    let order = [1,2,3,4,5].map(x => 0.618*x**1.618)
+    this.curves = [1, ...order].map(order => {
       let amp: number
       if (order === 1) amp = windowH*0.1/order
       else amp = windowH*0.2/order
