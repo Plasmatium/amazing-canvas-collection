@@ -74,15 +74,18 @@ export function randPos ({windowH, windowW}: {
 }
 
 export function randColor () {
-  return [0xff, 0xff, 0xff, 0xff].map(v => floor(random()*v))
+  return [0xff, 0xff, 0xff, 1].map(v => {
+    let ret = random()*v
+    return ret <= 1 ? ret : floor(ret)
+  })
 }
 export function makeRandomColorful () {
   // controls the color in range [0.382, 0.618]
   let [sr, sg, sb, sa] = [randn_bm(), randn_bm(), randn_bm(), randn_bm()]
   return (step: number) => {
-    let r = Math.floor(0xff*((sin(sr+step+0*PI/3)+1)*0.5*0.382+0.618))
-    let g = Math.floor(0xff*((sin(sr+step+2*PI/3)+1)*0.5*0.382+0.618))
-    let b = Math.floor(0xff*((sin(sr+step+4*PI/3)+1)*0.5*0.382+0.618))
+    let r = Math.floor(0xff*((sin(sr+step+0*PI/3)+1)*0.5))
+    let g = Math.floor(0xff*((sin(sr+step+2*PI/3)+1)*0.5))
+    let b = Math.floor(0xff*((sin(sr+step+4*PI/3)+1)*0.5))
     let a = 0.382
     return [r, g, b, a]
   }

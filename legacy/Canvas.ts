@@ -1,6 +1,6 @@
-import { showFPS, ParticleLike, makeRandomColorful, randn_bm, randColor } from "./others";
+import { showFPS, ParticleLike, makeRandomColorful, randn_bm } from './others'
 
-let {random, sin, PI} = Math
+let {random} = Math
 
 export abstract class Canvas{
   canvas: HTMLCanvasElement
@@ -50,70 +50,68 @@ export abstract class Canvas{
 }
 
 class DefaultCanvas extends Canvas {
-  curves: ((x: number) =>number)[]
-  step: number = 0
+  step: number
+  checkpoint: {x: number, y: number, color: (step: number) => number[]}[]
   constructor (public bgColor: string) {
     super(bgColor)
-    let {windowH} = this
-    let phase = random()*6.2832
-    this.curves = [1,3,5,7,9,11].map(order => {
-      let amp: number
-      if (order === 1) amp = windowH*0.1/order
-      else amp = windowH*0.2/order
-      let ret = (x: number) => {
-        return amp*sin(order*(2*PI*x*0.4e-3 + phase))
+    this.step = 0.0
+
+    let {windowW, windowH} = this
+    let interval = windowW / 10
+    let point1 = {
+      x: -random()*interval,
+      y: (randn_bm()*0.2+0.618)*windowH,
+      color: makeRandomColorful()
+    }
+    let point2 = {
+      x: -random()*interval,
+      y: (randn_bm()*0.2+point1.y),
+      color: makeRandomColorful()
+    }
+
+    this.checkpoint = [point1, point2]
+
+    for(let i=0; i<10; i++) {
+      let point = {
+        x: random()*interval + i*interval,
+        y: (randn_bm()*0.2+0.618)*windowH,
+        color: makeRandomColorful()
       }
-      // add a random color to each curve function
-      let [r,g,b] = randColor()
-      Object.assign(ret, {color: makeRandomColorful()})
-      return ret
-    })
+      this.checkpoint.push(point)
+    }
+
+    let point3 = {
+      x: windowW + random()*interval,
+      y: (randn_bm()*0.2+0.618)*windowH,
+      color: makeRandomColorful()
+    }
+    let point4 = {
+      x: windowW + random()*interval,
+      y: (randn_bm()*0.2+0.618)*windowH,
+      color: makeRandomColorful()
+    }
+    this.checkpoint.push(point3)
+    this.checkpoint.push(point4)
+
+    this.render()
   }
   clrscr ({bgColor, canvas, ctx, windowH, windowW, data}: Canvas = this) {
     ctx.fillStyle = bgColor
     ctx.fillRect(0, 0, windowW, windowH)
   }
-  colorful (step: number) {
-
-  }
   renderMain ({canvas, ctx, windowH, windowW, data}: Canvas = this) {
-    let base = this.curves[0]
-    this.curves.forEach((func, idx) => {
-      let veryStart, veryEnd, start, end, step
-      if (idx % 2 === 0) {
-        veryStart = -10000
-        veryEnd = 10000
-        start = 0
-        end = windowW
-        step = (n: number) => n+1
-      } else {
-        veryStart = 10000
-        veryEnd = -10000
-        start = windowW
-        end = 0
-        step = (n: number) => n-1
-      }
-      
-      if (idx % 2 === 0) {
-        ctx.beginPath()
-        ctx.moveTo(veryStart, windowH/2)
-      }
-
-      for (let i = start; i != end; i = step(i)) {
-        ctx.lineTo(i, base(i) + func(i) + windowH*0.2)
-      }
-      ctx.lineTo(veryEnd, windowH/2)
-      let color = (func as any).color(this.step)
-      ctx.fillStyle = `rgba(${color})`
-
-      if (idx % 2 !== 0) {
-        ctx.lineTo(veryEnd, windowH/2)
-        ctx.closePath()
-        ctx.fill()
-      }
-    })
-
-    this.step += 0.001
+    for(let i=0; i<10 + 2; i++) {
+      let points = this.checkpoint.slice(i, i + 3)
+      ctx.fillStyle = `rgba(${points[0].color(this.step)})`
+      ctx.beginPath()
+      ctx.moveTo(points[0].x, points[0].y)
+      ctx.lineTo(points[1].x, points[1].y)
+      ctx.lineTo(points[2].x, points[2].y)
+      ctx.closePath()
+      ctx.fill()
+      // ctx.strokeText(String(i), points[i+2].x, points[i+2].y)
+    }
+    this.step += 0.002
   }
 }
 

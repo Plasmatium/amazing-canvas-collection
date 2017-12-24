@@ -73,7 +73,7 @@ export default Vue.extend({
 }
 
 .script-link:hover {
-  background-color: #ffffff77;
+  background-color: #ffffffbb;
   box-shadow: 0 8px 16px 0 #0000001a;
 }
 .script-link:active {

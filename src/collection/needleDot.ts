@@ -18,7 +18,7 @@ class Dot {
     // this.color = [Math.floor(128*random() + 100),Math.floor(128*random() + 100),Math.floor(128*random() + 100), random()*0.3 + 0.5]
   }
   mutate () {
-    distortRoute(this, this.cv)
+    // distortRoute(this, this.cv)
     move(this)
     let {windowW, windowH} = this.cv
     rebound(this, {top: 0, bottom: windowH, left: 0, right: windowW})
@@ -45,7 +45,7 @@ class NeedleDotCanvas extends Canvas {
   //   ctx.fillRect(0, 0, windowW, windowH)
   // }
   createDots () {
-    let count = Math.floor(250*this.windowH*this.windowW/(1920*1080))
+    let count = Math.floor(150*this.windowH*this.windowW/(1920*1080))
     let data: Dot[] = this.data = new Array<Dot>(count)
     for (let i = 0; i < count; i++) {
       let pos = randPos(this)
@@ -53,7 +53,7 @@ class NeedleDotCanvas extends Canvas {
     }
   }
   renderMain ({canvas, ctx, windowH, windowW, data}: Canvas) {
-    let dThreshold = Math.sqrt(0.618*windowW*windowH/Math.PI)*30
+    let dThreshold = Math.sqrt(0.618*windowW*windowH/Math.PI)*22
 
     ctx.lineWidth = 0.3
     this.data.forEach((dot, idx) => {
