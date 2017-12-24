@@ -19,6 +19,9 @@ import {makeCanvas} from './components/vue-canvas'
 import {router, links} from './router'
 import VueRouter from 'vue-router'
 
+import Observable from './utils/rx'
+Object.assign(window, {Observable})
+
 Vue.use(VueRouter)
 
 export default Vue.extend({
@@ -27,6 +30,11 @@ export default Vue.extend({
     return {
       links
     }
+  },
+  mounted () {
+    let canvas = document.getElementsByTagName('canvas')[0]
+    let ob = Observable.fromEvent(canvas, 'click')
+    ob.subscribe(console.log)
   },
   router,
   computed: {
