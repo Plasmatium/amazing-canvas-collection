@@ -35,13 +35,10 @@ export default Vue.extend({
     let canvas = document.getElementsByTagName('canvas')[0]
     let ob = Observable.fromEvent(canvas, 'click')
     ob.subscribe(console.log)
+    ob.subscribe(e => console.log('mmmmmm'))
+    return 'success'   
   },
-  router,
-  computed: {
-    scripts (): any {
-      return this.$router
-    }
-  }
+  router
 })
 </script>
 
