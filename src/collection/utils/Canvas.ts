@@ -52,6 +52,7 @@ export abstract class Canvas{
 class DefaultCanvas extends Canvas {
   curves: ((x: number) =>number)[]
   step: number = 0
+  waveStep: number = 2.5
   constructor (public bgColor: string) {
     super(bgColor)
     let {windowH} = this
@@ -102,7 +103,7 @@ class DefaultCanvas extends Canvas {
       }
 
       for (let i = start; i != end; i = step(i)) {
-        ctx.lineTo(i, base(i) + func(i) + windowH*0.2)
+        ctx.lineTo(i, base(i+i*this.waveStep) + func(i-i*this.waveStep) + windowH*0.2)
       }
       ctx.lineTo(veryEnd, windowH/2)
       let color = (func as any).color(this.step)
@@ -116,6 +117,7 @@ class DefaultCanvas extends Canvas {
     })
 
     this.step += 0.001
+    this.waveStep = this.waveStep*0.98
   }
 }
 

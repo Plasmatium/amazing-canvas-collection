@@ -130,7 +130,8 @@ export function showFPS2 (ctx: CanvasRenderingContext2D) {
   .subscribe(data => {
     let timeCost = data.reduce((sum, d) => sum+d, 0)
     let fps = (100*1000/timeCost).toFixed(1)
-    ctx.fillStyle = 'orange'
+    ctx.fillStyle = '#444'
+    ctx.font = '16px helvetica, sans'
     ctx.fillText(`FPS: ${fps}`, 10, 20)
   })
 
