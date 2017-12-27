@@ -118,7 +118,6 @@ export function showFPS (ctx: CanvasRenderingContext2D) {
     fps = (100 / diffTime).toFixed(1)
     ctx.fillText(`FPS: ${fps}`, 10, 20)
   }
-
   return renderFPS
 }
 
