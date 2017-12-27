@@ -1,11 +1,11 @@
-import { showFPS, ParticleLike, makeRandomColorful, randn_bm, randColor } from "./others";
+import { showFPS, ParticleLike, makeRandomColorful, randn_bm, randColor, showFPS2 } from "./others";
 
 let {random, sin, PI} = Math
 
 export abstract class Canvas{
   canvas: HTMLCanvasElement
   ctx: CanvasRenderingContext2D
-  renderMask: {(ctx: CanvasRenderingContext2D): void}[]
+  renderMask: Function[]
   timerID: number
   data: any
   constructor (public bgColor: string | CanvasGradient) {
@@ -16,7 +16,7 @@ export abstract class Canvas{
     let ctx = canvas.getContext('2d')
     if (!ctx) throw Error(`context not found.`)
     this.ctx = ctx
-    this.renderMask = [showFPS()]
+    this.renderMask = [/*showFPS(ctx), */showFPS2(ctx)]
     
     window.onresize = e => {
       let target = e.target as (typeof window)
@@ -37,7 +37,7 @@ export abstract class Canvas{
     this.clrscr()
     this.renderMain(this)
     this.renderMask.forEach(mask => {
-      mask(this.ctx)
+      mask()
     })
   }
   run () {

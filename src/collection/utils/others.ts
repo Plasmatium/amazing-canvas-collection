@@ -1,4 +1,11 @@
 import { Canvas } from "./Canvas"
+import { Subject } from 'rxjs/Subject'
+import { Observer } from 'rxjs/observer'
+
+import 'rxjs/add/operator/pairwise'
+import 'rxjs/add/operator/map'
+import 'rxjs/add/operator/bufferCount'
+
 
 let {floor, random, sin, cos, tan, PI} = Math
 
@@ -91,11 +98,11 @@ export function makeRandomColorful () {
   }
 }
 
-export function showFPS () {
+export function showFPS (ctx: CanvasRenderingContext2D) {
   let prevTime = new Date().getTime()
   let count = 0
   let fps = '0'
-  function renderFPS (ctx: CanvasRenderingContext2D) {
+  function renderFPS () {
     count++
     ctx.fillStyle = 'green'
     ctx.font = '12px helvetica, sans'
@@ -113,6 +120,26 @@ export function showFPS () {
   }
 
   return renderFPS
+}
+
+export function showFPS2 (ctx: CanvasRenderingContext2D) {
+  let emitter = new Subject<number>()
+  let fpsSubscription = emitter
+  .pairwise()
+  .map(([prev, curr]) => curr - prev)
+  .bufferCount(100, 1)
+  .subscribe(data => {
+    let timeCost = data.reduce((sum, d) => sum+d, 0)
+    let fps = (100*1000/timeCost).toFixed(1)
+    ctx.fillStyle = 'orange'
+    ctx.fillText(`FPS: ${fps}`, 10, 20)
+  })
+
+  emitter.next(+new Date())
+  function fpsEmitter () {
+    emitter.next(+new Date())
+  }
+  return fpsEmitter
 }
 
 export class RefinedImageData {
