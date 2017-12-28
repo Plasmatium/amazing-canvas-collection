@@ -88,11 +88,12 @@ export function randColor () {
 }
 export function makeRandomColorful () {
   // controls the color in range [0.382, 0.618]
-  let [sr, sg, sb, sa] = [randn_bm(), randn_bm(), randn_bm(), randn_bm()]
+  let rand = randn_bm() * 10
+  console.log(rand)
   return (step: number) => {
-    let r = Math.floor(0xff*((sin(sr+step+0*PI/3)+1)*0.5))
-    let g = Math.floor(0xff*((sin(sr+step+2*PI/3)+1)*0.5))
-    let b = Math.floor(0xff*((sin(sr+step+4*PI/3)+1)*0.5))
+    let r = Math.floor(0xff*((sin(rand+step+0*PI/3)+1)*0.5))
+    let g = Math.floor(0xff*((sin(rand+step+2*PI/3)+1)*0.5))
+    let b = Math.floor(0xff*((sin(rand+step-2*PI/3)+1)*0.5))
     let a = 0.382
     return [r, g, b, a]
   }

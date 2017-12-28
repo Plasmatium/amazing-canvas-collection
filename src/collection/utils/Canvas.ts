@@ -52,11 +52,13 @@ export abstract class Canvas{
 class DefaultCanvas extends Canvas {
   curves: ((x: number) =>number)[]
   step: number = 0
-  waveStep: number = 2.5
+  waveStep: number = 0
+  ribbonMoving: boolean = false
   constructor (public bgColor: string) {
     super(bgColor)
     let {windowH} = this
-    let phase = random()*6.2832
+    let phase = random()*2
+    let phaseList = [1.5]
 
     let order = [1,2,3,4,5].map(x => 0.618*x**1.618)
     this.curves = [1, ...order].map(order => {
@@ -67,10 +69,11 @@ class DefaultCanvas extends Canvas {
         return amp*sin(order*(2*PI*x*0.4e-3 + phase))
       }
       // add a random color to each curve function
-      let [r,g,b] = randColor()
       Object.assign(ret, {color: makeRandomColorful()})
       return ret
     })
+
+    setTimeout(() => { this.ribbonMoving = true }, 1500)
   }
   clrscr ({bgColor, canvas, ctx, windowH, windowW, data}: Canvas = this) {
     ctx.fillStyle = bgColor
@@ -106,18 +109,20 @@ class DefaultCanvas extends Canvas {
         ctx.lineTo(i, base(i+i*this.waveStep) + func(i-i*this.waveStep) + windowH*0.2)
       }
       ctx.lineTo(veryEnd, windowH/2)
-      let color = (func as any).color(this.step)
-      ctx.fillStyle = `rgba(${color})`
 
       if (idx % 2 !== 0) {
+        let color = (func as any).color(this.step)
+        ctx.fillStyle = `rgba(${color})`
         ctx.lineTo(veryEnd, windowH/2)
         ctx.closePath()
         ctx.fill()
       }
     })
 
+    if (!this.ribbonMoving) return
     this.step += 0.001
-    this.waveStep = this.waveStep*0.98
+    let x = this.step*18
+    this.waveStep += Math.E**(-x*3) * (x*0.6)**2
   }
 }
 
