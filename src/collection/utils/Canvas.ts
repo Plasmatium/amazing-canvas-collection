@@ -1,4 +1,12 @@
-import { showFPS, ParticleLike, makeRandomColorful, randn_bm, randColor, showFPS2 } from "./others";
+import {
+  showFPS,
+  ParticleLike,
+  makeRandomColorful,
+  randn_bm,
+  randColor,
+  showFPS2
+} from "./others";
+import { Timestamp } from "rxjs/operators/timestamp";
 
 let {random, sin, PI} = Math
 
@@ -6,7 +14,7 @@ export abstract class Canvas{
   canvas: HTMLCanvasElement
   ctx: CanvasRenderingContext2D
   renderMask: Function[]
-  timerID: number
+  isRunning: boolean = false
   data: any
   constructor (public bgColor: string | CanvasGradient) {
     let canvas = document.getElementsByTagName('canvas')[0] as HTMLCanvasElement
@@ -16,7 +24,7 @@ export abstract class Canvas{
     let ctx = canvas.getContext('2d')
     if (!ctx) throw Error(`context not found.`)
     this.ctx = ctx
-    this.renderMask = [/*showFPS(ctx), */showFPS2(ctx)]
+    this.renderMask = [/*showFPS(ctx), */showFPS2()]
     
     window.onresize = e => {
       let target = e.target as (typeof window)
@@ -33,18 +41,20 @@ export abstract class Canvas{
     ctx.fillStyle = bgColor
     ctx.fillRect(0, 0, windowW, windowH)
   }
-  render () {
+  render (timestamp: number) {
     this.clrscr()
     this.renderMain(this)
     this.renderMask.forEach(mask => {
-      mask()
+      mask(timestamp)
     })
+    this.isRunning && window.requestAnimationFrame(this.render.bind(this))
   }
   run () {
-    this.timerID = window.setInterval(() => this.render(), 16)
+    this.isRunning = true
+    window.requestAnimationFrame(this.render.bind(this))
   }
   destory () {
-    window.clearInterval(this.timerID)
+    this.isRunning = false
   }
   onClick (e: MouseEvent) {  }
 }
@@ -75,9 +85,6 @@ class DefaultCanvas extends Canvas {
   clrscr ({bgColor, canvas, ctx, windowH, windowW, data}: Canvas = this) {
     ctx.fillStyle = bgColor
     ctx.fillRect(0, 0, windowW, windowH)
-  }
-  colorful (step: number) {
-
   }
   renderMain ({canvas, ctx, windowH, windowW, data}: Canvas = this) {
     let base = this.curves[0]
