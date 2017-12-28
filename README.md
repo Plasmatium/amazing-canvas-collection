@@ -2,6 +2,13 @@
 
 > Some of amazing canvas scripts collected here.
 
+## Screenshots
+
+![](https://github.com/Plasmatium/amazing-canvas-collection/blob/master/screenshots/1.png)
+![](https://github.com/Plasmatium/amazing-canvas-collection/blob/master/screenshots/2.png)
+![](https://github.com/Plasmatium/amazing-canvas-collection/blob/master/screenshots/3.png)
+![](https://github.com/Plasmatium/amazing-canvas-collection/blob/master/screenshots/4.png)
+
 ## Build Setup
 
 ``` bash
@@ -25,3 +32,8 @@ npm test
 ```
 
 For a detailed explanation on how things work, check out the [guide](http://vuejs-templates.github.io/webpack/) and [docs for vue-loader](http://vuejs.github.io/vue-loader).
+
+## Next
+
+1. Refector `textParticle` with webgl and add more fancy effect.
+2. Replace boring `glTest` with some awesome things
