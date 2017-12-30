@@ -1,73 +1,107 @@
 import { TransferParam } from "./others";
 
-export class GLProg {
-  public program: WebGLProgram
-  public attrLocs: { [variableName: string]: number } = {}
-  constructor (vsSrc: string, fsSrc: string, protected gl: WebGLRenderingContext) {
-    this.makeProgram(vsSrc, fsSrc)
+// 生成着色器方法，输入参数：渲染上下文，着色器类型，数据源
+export function generateGLShader(
+  gl: WebGLRenderingContext,
+  type: number, source: string
+) {
+  let shader = gl.createShader(type); // 创建着色器对象
+  gl.shaderSource(shader, source); // 提供数据源
+  gl.compileShader(shader); // 编译 -> 生成着色器
+  let success = gl.getShaderParameter(shader, gl.COMPILE_STATUS);
+  if (!success) {
+    let errString = String(gl.getShaderInfoLog(shader));
+    gl.deleteShader(shader);
+    throw Error(errString)
   }
-  private makeShader (type: number, source: string,) {
-    let {gl} = this
-    let shader = gl.createShader(type)
-    gl.shaderSource(shader, source)
-    gl.compileShader(shader)
-    let success = gl.getShaderParameter(shader, gl.COMPILE_STATUS);
-
-    if (!success) {
-      console.log(gl.getShaderInfoLog(shader))
-      gl.deleteShader(shader)
-    }
-    return shader
-  }
-  private makeProgram(vsSrc: string, fsSrc: string) {
-    let {gl} = this
-    let vShader = this.makeShader(gl.VERTEX_SHADER, vsSrc)
-    let fShader = this.makeShader(gl.FRAGMENT_SHADER, fsSrc)
-
-    let program = gl.createProgram()
-    gl.attachShader(program, vShader)
-    gl.attachShader(program, fShader)
-    gl.linkProgram(program)
-
-    let success = gl.getProgramParameter(program, gl.LINK_STATUS)
-    if (!success || !program) {
-      console.log(gl.getProgramInfoLog(program))
-      gl.deleteProgram(program)
-      return
-    }
-    this.program = program
-  }
-  assignAttrLoc (attrList: string[]) {
-    let {gl, program} = this
-    attrList.forEach(attrName => {
-      let loc = gl.getAttribLocation(program, attrName)
-      this.attrLocs[attrName] = loc
-    })
-  }
-  transferArray (attrName: string,
-    buffer: WebGLBuffer, 
-    {
-      size,
-      type,
-      normalize,
-      stride,
-      offset
-    }: TransferParam
-  ) {
-    let {gl} = this
-    let attrLoc = this.attrLocs[attrName]
-    gl.enableVertexAttribArray(attrLoc)
-    // gl.bindBuffer(gl.ARRAY_BUFFER, buffer)
-    gl.vertexAttribPointer(attrLoc, size, type, normalize, stride, offset)
-  }
+  return shader as WebGLShader;
 }
 
-export abstract class GLScene {
-  protected glPrograms: { [progName: string]: GLProg } = {}
-  protected bufferPool: { [bufferName: string]: WebGLBuffer } = {}
+// 生成着色程序
+export function generateGLProgram (
+  gl: WebGLRenderingContext,
+  vsSrc: string,
+  fsSrc: string
+) {
+  let program = gl.createProgram();
+
+  let vertexShader = generateGLShader(gl, gl.VERTEX_SHADER, vsSrc);
+  gl.attachShader(program, vertexShader);
+  
+  let fragmentShader = generateGLShader(gl, gl.FRAGMENT_SHADER, fsSrc);
+  gl.attachShader(program, fragmentShader);
+
+  gl.linkProgram(program);
+  let success = gl.getProgramParameter(program, gl.LINK_STATUS);
+  if (!success) {
+    let errString = String(gl.getProgramInfoLog(program));
+    gl.deleteProgram(program);
+    throw Error(errString)
+  }
+  return program; 
+}
+
+// 从js数据传送到显存
+export function jsArr2gRam (
+  gl: WebGLRenderingContext,
+  target: number,
+  buffer: WebGLBuffer | null, // this is gRam
+  data: Float32Array,
+  usage: number
+) {
+  gl.bindBuffer(target, buffer)
+  gl.bufferData(target, data, usage)
+}
+
+// 将着色程序中的属性指定到显存位置 (属性可以是已索引的，也可以提供着色程序和名称)
+export interface PointerConfig {
+  size: number
+  type: number
+  normalize: boolean
+  stride: number
+  offset: number
+}
+export function gRam2ShaderAttr (
+  gl: WebGLRenderingContext,
+  target: number,
+  buffer: WebGLBuffer | null,
+  attrIdx: number,
+  pointerConfig: PointerConfig
+): void
+export function gRam2ShaderAttr (
+  gl: WebGLRenderingContext,
+  target: number,
+  buffer: WebGLBuffer | null,
+  attrName: string,
+  pointerConfig: PointerConfig,
+  program?: WebGLProgram | null
+): void
+
+export function gRam2ShaderAttr (
+  gl: WebGLRenderingContext,
+  target: number,
+  buffer: WebGLBuffer | null,
+  attr: string | number,
+  pointerConfig: PointerConfig,
+  program?: WebGLProgram | null
+) {
+  let attrIdx: number
+
+  if (typeof attr === 'string') {
+    if (!program) throw Error('webgl program should be provided if attr is string')
+    attrIdx = gl.getAttribLocation(program, attr)
+  } else attrIdx = attr
+
+  let {size, type, normalize, stride, offset} = pointerConfig
+  gl.bindBuffer(target, buffer)
+  gl.vertexAttribPointer(attrIdx, size, type, normalize, stride, offset)
+  gl.enableVertexAttribArray(attrIdx)
+}
+
+export class GLScene {
+  public programs: {[progName: string]: WebGLProgram} = {}
   public canvas: HTMLCanvasElement
-  public gl: WebGLRenderingContext
-  timer: number
+  protected gl: WebGLRenderingContext
   constructor () {
     let canvas = document.getElementsByTagName('canvas')[0]
     if (!canvas) throw Error('canvas not found')
@@ -77,27 +111,9 @@ export abstract class GLScene {
     this.canvas = canvas
     this.gl = gl
   }
-  get windowH () { return this.gl.canvas.height }
-  get windowW () { return this.gl.canvas.width }
-  addProg (name: string, prog: GLProg) {
-    this.glPrograms[name] = prog
-  }
-  addArrayBuffer (bufferName: string, dataArr: Float32Array) {
-    const {gl} = this
-    let buffer = gl.createBuffer()
-    if (!buffer) throw Error('could not create buffer')
-
-    gl.bindBuffer(gl.ARRAY_BUFFER, buffer)
-    gl.bufferData(gl.ARRAY_BUFFER, dataArr, gl.STATIC_DRAW)
-    this.bufferPool[bufferName] = buffer
-  }
-
-  abstract render (): void
-  run () {
-    this.timer = window.setInterval(() => this.render(), 16)
-  }
+  get windowW () { return this.canvas.width }
+  get windowH () { return this.canvas.height }
+  run () {}
+  destory () {}
   onClick (e: MouseEvent) {}
-  destory () {
-    window.clearInterval(this.timer)
-  }
 }
