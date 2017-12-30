@@ -5,6 +5,8 @@ import { Observer } from 'rxjs/observer'
 import 'rxjs/add/operator/pairwise'
 import 'rxjs/add/operator/map'
 import 'rxjs/add/operator/bufferCount'
+import 'rxjs/add/operator/scan'
+import 'rxjs/add/operator/timeout'
 
 
 let {floor, random, sin, cos, tan, PI} = Math
@@ -122,23 +124,51 @@ export function showFPS (ctx: CanvasRenderingContext2D) {
   return renderFPS
 }
 
-export function showFPS2 (ctx: CanvasRenderingContext2D) {
+export function showFPS2 () {
+  let fpsMask = document.getElementById('fps-present') as HTMLCanvasElement | null
+  if (!fpsMask) {
+    fpsMask = document.createElement('canvas')
+    fpsMask.setAttribute('width', '80')
+    fpsMask.setAttribute('height', '30')
+    fpsMask.id = 'fps-present'
+    fpsMask.style.position = 'fixed'
+    fpsMask.style.top = '0'
+    document.body.appendChild(fpsMask)
+  }
+
+  let ctx = fpsMask.getContext('2d') as CanvasRenderingContext2D
+  if (!ctx) throw Error('fps present mask canvas not found')
+
   let emitter = new Subject<number>()
   let fpsSubscription = emitter
+  .timeout(5000) // close emitter and do clean staff if no data in 5sec
   .pairwise()
   .map(([prev, curr]) => curr - prev)
   .bufferCount(100, 1)
-  .subscribe(data => {
-    let timeCost = data.reduce((sum, d) => sum+d, 0)
-    let fps = (100*1000/timeCost).toFixed(1)
-    ctx.fillStyle = '#444'
-    ctx.font = '16px helvetica, sans'
-    ctx.fillText(`FPS: ${fps}`, 10, 20)
+  .scan((presentFPS, fpsArr, idx) => {
+    if (idx%33 === 0) {
+      let timeCost = fpsArr.reduce((sum, d) => sum+d, 0)
+      let fps = (100*1000/timeCost).toFixed(1)
+      presentFPS = fps
+    }
+    return presentFPS
+  }, '0')
+  .subscribe({
+    next: fps => {
+      ctx.clearRect(0, 0, 80, 30)
+      ctx.fillStyle = '#444'
+      ctx.font = '16px helvetica, sans'
+      ctx.fillText(`FPS: ${fps}`, 10, 20)
+    },
+    error: err => {
+      // fpsSubscription was auto unscubscribed when timeout trigger error
+      emitter.unsubscribe()
+    }
   })
 
   emitter.next(+new Date())
-  function fpsEmitter () {
-    emitter.next(+new Date())
+  function fpsEmitter (timestemp: number) {
+    emitter.next(timestemp)
   }
   return fpsEmitter
 }

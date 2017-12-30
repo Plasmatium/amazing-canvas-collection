@@ -73,9 +73,6 @@ class NeedleDotCanvas extends Canvas {
       dot.mutate()
     })
   }
-  animate ({canvas, ctx, windowH, windowW, data}: Canvas = this) {
-    this.render()
-  }
 }
 
 export function needleDot () {
