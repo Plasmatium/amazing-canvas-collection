@@ -11,6 +11,7 @@ class Donut {
     public thickness: number,
     public color: number[],
     private cv: Canvas,
+    private actx: AudioContext
   ) {
     this.isSlow = false
     this.isDead = false
@@ -65,9 +66,15 @@ function isValid (arr: any[]) {
 }
 class ColorfulDonut extends Canvas {
   public data: Set<Donut[]> = new Set()
+  private actx: AudioContext
   // public step: number = 0
   constructor (public bgColor: string | CanvasGradient = "#eacdae") {
     super(bgColor)
+
+    // add sound effects
+    let AudioContext = window.AudioContext || (window as any).webkitAudioContext
+    if (!AudioContext) throw Error('web audio api not supported')
+    this.actx = new AudioContext()
   }
   renderMain ({canvas, ctx, windowH, windowW, data}: Canvas = this) {
     this.data.forEach(dataGroup => {
@@ -94,7 +101,7 @@ class ColorfulDonut extends Canvas {
     for (let i = 0; i < count; i++) {
       let randColor = [255, 255, 255].map(c => Math.floor(c * Math.random()))
       let r: number = 0
-      while (r < 5) r = Math.abs(randn_bm() * 5 + 10)
+      while (r < 5) r = Math.abs(randn_bm() * 7) + 4.33
       ret.push(new Donut(
         // careful, **DO NOT USE** `pos` as an object,
         // or all particle will act on the same pos object
@@ -102,7 +109,8 @@ class ColorfulDonut extends Canvas {
         {vx: randn_bm()*10, vy: -Math.abs(randn_bm()*25)},
         r, Math.abs(randn_bm()*3.1+3.1),
         [...randColor, 1.0], 
-        this
+        this,
+        this.actx
       ))
     }
     this.data.add(ret)
@@ -110,6 +118,11 @@ class ColorfulDonut extends Canvas {
   onClick (e: MouseEvent) {
     let {x, y} = e
     this.addData(x, y)
+  }
+  destory () {
+    super.destory()
+    console.log(this.actx)
+    this.actx.close()
   }
 }
 
