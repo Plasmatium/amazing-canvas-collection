@@ -221,23 +221,30 @@ export class BufferDots {
 export function rebound(
   {pos, dir}: ParticleLike,
   {top, bottom, left, right}: Boundary,
-  decay = {dcx: 1, dcy: 1}
+  decay = {dcx: 1, dcy: 1},
+  callback?: Function
 ) {
+  let hit = false
   if (pos.x < left) {
     pos.x = left
     dir.vx *= -decay.dcx
+    hit = true
   } else if (pos.x > right) {
     pos.x = right
     dir.vx *= -decay.dcx
+    hit = true
   }
 
   if (pos.y < top) {
     pos.y = top
     dir.vy *= -decay.dcy
+    hit = true
   } else if (pos.y > bottom) {
     pos.y = bottom
     dir.vy *= -decay.dcy
+    hit = true
   }
+  callback && hit && callback()
 }
 
 export function distortRoute(

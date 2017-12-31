@@ -1,6 +1,7 @@
 import { Canvas } from "./utils/Canvas"
 import { ParticleLike, makeLinearGradient, applyGravity, rebound, move, randn_bm, earthFricion } from "./utils/others"
 
+let tuneList = [-9, -5, -2, 3, 7, 10, 15]
 class Donut {
   isSlow: boolean
   isDead: boolean
@@ -27,7 +28,9 @@ class Donut {
     else bottom = windowH*0.9
     rebound(
       this,
-      {top: -Infinity, bottom, left: 0, right: windowW}
+      {top: -Infinity, bottom, left: 0, right: windowW},
+      {dcx: 1, dcy: 1},
+      () => this.makeSound()
     ) 
     earthFricion(this, this.r*0.05, bottom)
 
@@ -55,6 +58,28 @@ class Donut {
     let [r, g, b, a] = this.color
     if (a < 1/255) { this.isDead = true }
     this.color = [r, g, b, a*0.9]
+  }
+  makeSound () {
+    let {actx} = this
+    let tuneIdx = Math.round(3*(Math.sin(this.r*this.thickness)+1))
+    console.log(tuneIdx)
+    let tune = tuneList[tuneIdx]
+    let amp = actx.createGain()
+    let osc = actx.createOscillator()
+
+    let startTime = actx.currentTime
+    let endTime = startTime + 0.5
+
+    amp.gain.value = 1
+    amp.gain.setTargetAtTime(0, startTime, 0.15)
+    osc.detune.value = tune * 100
+    // osc.type = 'sawtooth' as any
+
+    osc.connect(amp)
+    amp.connect(actx.destination)
+
+    osc.start(startTime)
+    osc.stop(endTime)
   }
 }
 
@@ -101,7 +126,7 @@ class ColorfulDonut extends Canvas {
     for (let i = 0; i < count; i++) {
       let randColor = [255, 255, 255].map(c => Math.floor(c * Math.random()))
       let r: number = 0
-      while (r < 5) r = Math.abs(randn_bm() * 7) + 4.33
+      while (r < 5) r = Math.abs(randn_bm() * 7) + 3
       ret.push(new Donut(
         // careful, **DO NOT USE** `pos` as an object,
         // or all particle will act on the same pos object
@@ -121,7 +146,6 @@ class ColorfulDonut extends Canvas {
   }
   destory () {
     super.destory()
-    console.log(this.actx)
     this.actx.close()
   }
 }
