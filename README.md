@@ -2,6 +2,11 @@
 
 > Some of amazing canvas scripts collected here.
 
+## Demo
+
+You can run this demo [here](https://plasmatium.github.io/).
+And surprise in colorfulDonut! (Maybe)
+
 ## Screenshots
 
 ![](https://github.com/Plasmatium/amazing-canvas-collection/blob/master/screenshots/1.png)
