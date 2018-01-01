@@ -29,8 +29,8 @@ class Donut {
     rebound(
       this,
       {top: -Infinity, bottom, left: 0, right: windowW},
-      {dcx: 1, dcy: 1},
-      () => this.makeSound()
+      {dcx: 0.8, dcy: 0.8},
+      this.makeSound.bind(this)
     ) 
     earthFricion(this, this.r*0.05, bottom)
 
@@ -59,7 +59,7 @@ class Donut {
     if (a < 1/255) { this.isDead = true }
     this.color = [r, g, b, a*0.9]
   }
-  makeSound () {
+  makeSound (strength: number) {
     let {actx, cv} = this
     if (!actx.destination) { return }
     let {windowH} = cv
@@ -69,16 +69,17 @@ class Donut {
     let osc = actx.createOscillator()
 
     let startTime = actx.currentTime
-    let endTime = startTime + 0.5
+    let endTime = startTime + 2
 
     // this.color[3] is alpha channel,
     // when graphic of a donut is dissapeared,
     // its sound should be dissapeared too.
     // Also consider its height to hit strength
-    let peekGain = this.color[3] // * (windowH - this.pos.y) / windowH
+    let peekGain = 0.1 * this.color[3] * strength // * (windowH - this.pos.y) / windowH
+
     amp.gain.value = 0
-    amp.gain.setTargetAtTime(peekGain, startTime, 0.0001)
-    amp.gain.setTargetAtTime(0, startTime+0.1, 0.15)
+    amp.gain.setTargetAtTime(peekGain, startTime, 0.005)
+    amp.gain.setTargetAtTime(0, startTime+0.1, 0.05)
     osc.detune.value = tune * 100
     // osc.type = 'square' as any
 
@@ -130,7 +131,7 @@ class ColorfulDonut extends Canvas {
   
   addData (x?: number, y?: number) {
     let {windowH, windowW} = this
-    let count = windowH * windowW / (1920*1080) * 30
+    let count = 1 // windowH * windowW / (1920*1080) * 30
     let ret = []
     for (let i = 0; i < count; i++) {
       let randColor = [255, 255, 255].map(c => Math.floor(c * Math.random()))
@@ -150,6 +151,7 @@ class ColorfulDonut extends Canvas {
     this.data.add(ret)
   }
   onClick (e: MouseEvent) {
+    super.onClick(e)
     let {x, y} = e
     this.addData(x, y)
   }

@@ -60,7 +60,9 @@ export abstract class Canvas{
   destory () {
     this.isRunning = false
   }
-  onClick (e: MouseEvent) {  }
+  onClick (e: MouseEvent) { 
+    e.preventDefault()
+   }
 }
 
 class DefaultCanvas extends Canvas {

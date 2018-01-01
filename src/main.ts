@@ -3,6 +3,12 @@
 import Vue from 'vue'
 import App from './App.ts.vue'
 
+// remove 300ms delay
+const Fastclick = require('fastclick')
+document.addEventListener('DOMContentLoaded', function() {
+  Fastclick.attach(document.body);
+}, false)
+
 Vue.config.productionTip = false
 
 /* eslint-disable no-new */

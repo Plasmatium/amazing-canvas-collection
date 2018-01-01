@@ -12,12 +12,14 @@
     "gen": "node ./build/genIdx.js"
   },
   "dependencies": {
+    "fastclick": "^1.0.6",
     "rxjs": "^5.5.6",
     "vue": "^2.5.2",
     "vue-router": "^3.0.1"
   },
   "devDependencies": {
     "@types/chai": "^4.0.8",
+    "@types/fastclick": "^1.0.28",
     "@types/mocha": "^2.2.44",
     "@types/node": "^8.0.57",
     "@types/webaudioapi": "0.0.27",

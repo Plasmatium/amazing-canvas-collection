@@ -220,29 +220,36 @@ export function rebound(
   {pos, dir}: ParticleLike,
   {top, bottom, left, right}: Boundary,
   decay = {dcx: 1, dcy: 1},
-  callback?: Function
+  callback?: (strength: number) => void
 ) {
   let hit = false
+  let strength = 0
   if (pos.x < left) {
     pos.x = left
     dir.vx *= -decay.dcx
     hit = true
+    strength = Math.abs(dir.vx) * 0.2
   } else if (pos.x > right) {
     pos.x = right
     dir.vx *= -decay.dcx
     hit = true
+    strength = Math.abs(dir.vx) * 0.2
   }
 
   if (pos.y < top) {
     pos.y = top
     dir.vy *= -decay.dcy
     hit = true
+    strength = Math.abs(dir.vy) * 0.2
   } else if (pos.y > bottom) {
     pos.y = bottom
     dir.vy *= -decay.dcy
     hit = true
+    strength = Math.abs(dir.vy) * 0.2
   }
-  callback && hit && callback()
+  if (strength > 0.5) strength = 0.5
+  if (strength < 0.15) strength = 0
+  callback && hit && callback(strength)
 }
 
 export function distortRoute(
