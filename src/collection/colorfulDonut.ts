@@ -60,9 +60,10 @@ class Donut {
     this.color = [r, g, b, a*0.9]
   }
   makeSound () {
-    let {actx} = this
+    let {actx, cv} = this
+    if (!actx.destination) { return }
+    let {windowH} = cv
     let tuneIdx = Math.round(3*(Math.sin(this.r*this.thickness)+1))
-    console.log(tuneIdx)
     let tune = tuneList[tuneIdx]
     let amp = actx.createGain()
     let osc = actx.createOscillator()
@@ -70,10 +71,16 @@ class Donut {
     let startTime = actx.currentTime
     let endTime = startTime + 0.5
 
-    amp.gain.value = 1
-    amp.gain.setTargetAtTime(0, startTime, 0.15)
+    // this.color[3] is alpha channel,
+    // when graphic of a donut is dissapeared,
+    // its sound should be dissapeared too.
+    // Also consider its height to hit strength
+    let peekGain = this.color[3] // * (windowH - this.pos.y) / windowH
+    amp.gain.value = 0
+    amp.gain.setTargetAtTime(peekGain, startTime, 0.0001)
+    amp.gain.setTargetAtTime(0, startTime+0.1, 0.15)
     osc.detune.value = tune * 100
-    // osc.type = 'sawtooth' as any
+    // osc.type = 'square' as any
 
     osc.connect(amp)
     amp.connect(actx.destination)
@@ -98,7 +105,9 @@ class ColorfulDonut extends Canvas {
 
     // add sound effects
     let AudioContext = window.AudioContext || (window as any).webkitAudioContext
-    if (!AudioContext) throw Error('web audio api not supported')
+    if (!AudioContext) {
+      throw Error('web audio api not supported')
+    }
     this.actx = new AudioContext()
   }
   renderMain ({canvas, ctx, windowH, windowW, data}: Canvas = this) {

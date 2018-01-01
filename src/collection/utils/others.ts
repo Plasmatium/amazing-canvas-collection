@@ -7,6 +7,7 @@ import 'rxjs/add/operator/map'
 import 'rxjs/add/operator/bufferCount'
 import 'rxjs/add/operator/scan'
 import 'rxjs/add/operator/timeout'
+import { emit } from "cluster";
 
 
 let {floor, random, sin, cos, tan, PI} = Math
@@ -127,7 +128,7 @@ export function showFPS2 () {
   let fpsMask = document.getElementById('fps-present') as HTMLCanvasElement | null
   if (!fpsMask) {
     fpsMask = document.createElement('canvas')
-    fpsMask.setAttribute('width', '80')
+    fpsMask.setAttribute('width', '90')
     fpsMask.setAttribute('height', '30')
     fpsMask.id = 'fps-present'
     fpsMask.style.position = 'fixed'
@@ -140,7 +141,6 @@ export function showFPS2 () {
 
   let emitter = new Subject<number>()
   let fpsSubscription = emitter
-  .timeout(5000) // close emitter and do clean staff if no data in 5sec
   .pairwise()
   .map(([prev, curr]) => curr - prev)
   .bufferCount(100, 1)
@@ -152,21 +152,19 @@ export function showFPS2 () {
     }
     return presentFPS
   }, '0')
-  .subscribe({
-    next: fps => {
-      ctx.clearRect(0, 0, 80, 30)
-      ctx.fillStyle = '#444'
-      ctx.font = '16px helvetica, sans'
-      ctx.fillText(`FPS: ${fps}`, 10, 20)
-    },
-    error: err => {
-      // fpsSubscription was auto unscubscribed when timeout trigger error
-      emitter.unsubscribe()
-    }
+  .subscribe(fps => {
+    ctx.clearRect(0, 0, 90, 30)
+    ctx.fillStyle = '#444'
+    ctx.font = '16px helvetica, sans'
+    ctx.fillText(`FPS: ${fps}`, 10, 20)
   })
 
   emitter.next(+new Date())
-  function fpsEmitter (timestemp: number) {
+  function fpsEmitter (timestemp: number, isRunning: boolean) {
+    if(!isRunning) {
+      emitter.unsubscribe()
+      return
+    }
     emitter.next(timestemp)
   }
   return fpsEmitter

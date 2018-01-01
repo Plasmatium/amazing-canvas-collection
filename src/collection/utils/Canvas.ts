@@ -41,17 +41,21 @@ export abstract class Canvas{
     ctx.fillStyle = bgColor
     ctx.fillRect(0, 0, windowW, windowH)
   }
-  render (timestamp: number) {
+  render (timestamp: number, isRunning: boolean) {
     this.clrscr()
     this.renderMain(this)
     this.renderMask.forEach(mask => {
-      mask(timestamp)
+      mask(timestamp, isRunning)
     })
-    this.isRunning && window.requestAnimationFrame(this.render.bind(this))
+    this.isRunning && window.requestAnimationFrame((timestamp: number) => {
+      this.render(timestamp, this.isRunning)
+    })
   }
   run () {
     this.isRunning = true
-    window.requestAnimationFrame(this.render.bind(this))
+    window.requestAnimationFrame((timestamp: number) => {
+      this.render(timestamp, this.isRunning)
+    })
   }
   destory () {
     this.isRunning = false
@@ -70,6 +74,7 @@ class DefaultCanvas extends Canvas {
     let phase = random()*2
     let phaseList = [1.5]
 
+    // generate sine envelope
     let order = [1,2,3,4,5].map(x => 0.618*x**1.618)
     this.curves = [1, ...order].map(order => {
       let amp: number
