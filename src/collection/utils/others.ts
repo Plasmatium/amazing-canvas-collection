@@ -248,7 +248,7 @@ export function rebound(
     strength = Math.abs(dir.vy) * 0.2
   }
   if (strength > 0.5) strength = 0.5
-  if (strength < 0.15) strength = 0
+  if (strength < 0.25) strength = 0
   callback && hit && callback(strength)
 }
 

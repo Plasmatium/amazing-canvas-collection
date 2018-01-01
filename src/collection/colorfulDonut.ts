@@ -1,10 +1,12 @@
 import { Canvas } from "./utils/Canvas"
 import { ParticleLike, makeLinearGradient, applyGravity, rebound, move, randn_bm, earthFricion } from "./utils/others"
 
-let tuneList = [-9, -5, -2, 3, 7, 10, 15]
+let tuneList = [-9, -7, -5, -2, 0, 3, 5, 7, 10, 12]
 class Donut {
   isSlow: boolean
   isDead: boolean
+  private amp: GainNode
+  private osc: OscillatorNode
   constructor (
     public pos: ParticleLike['pos'],
     public dir: ParticleLike['dir'],
@@ -16,6 +18,19 @@ class Donut {
   ) {
     this.isSlow = false
     this.isDead = false
+
+    let tuneIdx = Math.round(8*Math.random())
+    let tune = tuneList[tuneIdx]
+    this.amp = this.actx.createGain()
+    this.osc = this.actx.createOscillator()
+    this.amp.gain.value = 0
+    // this.osc.type = 'square' as any
+    this.osc.detune.value = tune*100
+    this.osc.connect(this.amp)
+    this.amp.connect(this.actx.destination)
+    this.osc.start(this.actx.currentTime)
+    // Basically, donut dies in 10sec
+    this.osc.stop(this.actx.currentTime + 10)
   }
   mutate () {
     let {pos, dir} = this
@@ -62,11 +77,6 @@ class Donut {
   makeSound (strength: number) {
     let {actx, cv} = this
     if (!actx.destination) { return }
-    let {windowH} = cv
-    let tuneIdx = Math.round(3*(Math.sin(this.r*this.thickness)+1))
-    let tune = tuneList[tuneIdx]
-    let amp = actx.createGain()
-    let osc = actx.createOscillator()
 
     let startTime = actx.currentTime
     let endTime = startTime + 2
@@ -75,19 +85,10 @@ class Donut {
     // when graphic of a donut is dissapeared,
     // its sound should be dissapeared too.
     // Also consider its height to hit strength
-    let peekGain = 0.1 * this.color[3] * strength // * (windowH - this.pos.y) / windowH
+    let peekGain = 0.2 * this.color[3] * strength * strength // * (windowH - this.pos.y) / windowH
 
-    amp.gain.value = 0
-    amp.gain.setTargetAtTime(peekGain, startTime, 0.005)
-    amp.gain.setTargetAtTime(0, startTime+0.1, 0.05)
-    osc.detune.value = tune * 100
-    // osc.type = 'square' as any
-
-    osc.connect(amp)
-    amp.connect(actx.destination)
-
-    osc.start(startTime)
-    osc.stop(endTime)
+    this.amp.gain.setTargetAtTime(peekGain, startTime, 0.01)
+    this.amp.gain.setTargetAtTime(0, startTime+0.1, 0.062)
   }
 }
 
@@ -131,7 +132,7 @@ class ColorfulDonut extends Canvas {
   
   addData (x?: number, y?: number) {
     let {windowH, windowW} = this
-    let count = 1 // windowH * windowW / (1920*1080) * 30
+    let count = windowH * windowW / (1920*1080) * 15
     let ret = []
     for (let i = 0; i < count; i++) {
       let randColor = [255, 255, 255].map(c => Math.floor(c * Math.random()))
