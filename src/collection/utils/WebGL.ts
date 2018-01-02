@@ -1,4 +1,5 @@
-import { TransferParam } from "./others";
+import { TransferParam, showFPS2 } from "./others";
+import { timestamp } from "rxjs/operators/timestamp";
 
 let {random, round, floor, sin, cos, PI} = Math
 
@@ -102,10 +103,12 @@ export function gRam2ShaderAttr (
   gl.bindBuffer(target, null)
 }
 
-export class GLScene {
+export abstract class GLScene {
   public programs: {[progName: string]: WebGLProgram} = {}
   public canvas: HTMLCanvasElement
   protected gl: WebGLRenderingContext
+  isRunning: boolean = false
+  renderMask: Function[]
   constructor () {
     let canvas = document.getElementsByTagName('canvas')[0]
     if (!canvas) throw Error('canvas not found')
@@ -114,49 +117,61 @@ export class GLScene {
 
     this.canvas = canvas
     this.gl = gl
+    
+    this.renderMask = [showFPS2()]
   }
   get windowW () { return this.canvas.width }
   get windowH () { return this.canvas.height }
-  run () {}
+  abstract renderMain (timestamp: number): void
+  render (timestamp: number) {
+    this.isRunning && window.requestAnimationFrame(ts => {
+      this.render(ts)
+    })
+    this.renderMain(timestamp)
+    this.renderMask.forEach(mask => {
+      mask(timestamp, this.isRunning)
+    })
+  }
+  run () {
+    this.isRunning = true
+    window.requestAnimationFrame(ts => this.render(ts))
+  }
   destory () {}
   onClick (e: MouseEvent) {}
 }
 
 // generator vertices
-export function genCircle (r: number, div: number = 12) {
+export function genCircle (r: number, div: number = 20) {
   let ret: number[] = []
-  let x = round(random()*200)
-  let y = round(random()*200)
   for (let i=0; i<2*PI; i += 2*PI/div) {
-    ret.push(
-      Math.sin(i)*r + x,
-      Math.cos(i)*r + y
-    )
+    ret.push(Math.sin(i)*r, Math.cos(i)*r)
   }
   return ret
 }
 
 // for Donuts
-const circleList = [5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25]
+const circleList = [5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23]
 .map(r => {
   return genCircle(r)
 })
 // circleList.length === 21
 export function genDonut () {
-  let outerIdx = floor(random() * 20 + 1) // [1, 20]
+  let len = circleList.length
+  let outerIdx = floor(random() * (len-1) + 1) // [1, len-1]
   let innerIdx = outerIdx
   while (innerIdx === outerIdx) innerIdx = floor(random()*outerIdx) // [0, outer]
 
   let innerC = circleList[innerIdx]
   let outerC = circleList[outerIdx]
-  console.log(innerIdx, outerIdx)
-  console.log(innerC)
-  console.log(outerC)
+
+  // debug position for x, y
+  let x = random()*800
+  let y = random()*800
 
   // flat zip two circle
   let ret: number[] = []
   for (let i=0; i<innerC.length; i+=2) {
-    ret.push(innerC[i], innerC[i+1], outerC[i], outerC[i+1])
+    ret.push(innerC[i]+x, innerC[i+1]+y, outerC[i]+x, outerC[i+1]+y)
   }
   ret.push(ret[0], ret[1], ret[2], ret[3]) // 闭合点
   ret.push(ret[2], ret[3]) // 结尾化点
@@ -164,4 +179,9 @@ export function genDonut () {
   return ret
 }
 
-export const dd = [...genDonut(), ...genDonut()]
+const _dd: number[] = []
+for(let i=0; i<20000; i++) {
+  _dd.push(...genDonut())
+}
+
+export const dd = _dd

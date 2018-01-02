@@ -35,11 +35,8 @@ class GLColorfulDonut extends GLScene {
     super()
     let {windowW, windowH, gl} = this
     this.vertices = dd
-    console.log(this.vertices)
-  }
-  run () {
-    let {gl, bgColor, windowW, windowH} = this
-    let [r, g, b, a] = bgColor
+
+    // init
     let program = generateGLProgram(gl, vsSrc, fsSrc)
     let u_resolutionLoc = gl.getUniformLocation(program, 'u_resolution')
     let positionsBuffer = gl.createBuffer()
@@ -54,18 +51,17 @@ class GLColorfulDonut extends GLScene {
     let data = new Float32Array(this.vertices)
     jsArr2gRam(gl, gl.ARRAY_BUFFER, positionsBuffer, data, gl.STATIC_DRAW)
     gRam2ShaderAttr(gl, gl.ARRAY_BUFFER, positionsBuffer, 'a_position', pointerConfig, program)
-    // pointerConfig.offset = 57*4
-    // pointerConfig.size = 4
-    // gRam2ShaderAttr(gl, gl.ARRAY_BUFFER, positionsBuffer, 'a_color', pointerConfig, program)
-
-
-    // draw
-    gl.viewport(0, 0, windowW, windowH)
     gl.useProgram(program)
     gl.uniform2f(u_resolutionLoc, windowW, windowH)
+  }
+  renderMain (timestamp: number) {
+    let {gl, bgColor, windowW, windowH} = this
+    let [r, g, b, a] = bgColor
+    // draw
+    gl.viewport(0, 0, windowW, windowH)
     gl.clearColor(r, g, b, a)
     gl.clear(gl.COLOR_BUFFER_BIT)
-    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 56)
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, this.vertices.length / 2)
   }
 }
 

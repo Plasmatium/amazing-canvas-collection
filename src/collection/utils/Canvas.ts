@@ -41,20 +41,20 @@ export abstract class Canvas{
     ctx.fillStyle = bgColor
     ctx.fillRect(0, 0, windowW, windowH)
   }
-  render (timestamp: number, isRunning: boolean) {
+  render (timestamp: number) {
     this.isRunning && window.requestAnimationFrame((timestamp: number) => {
-      this.render(timestamp, this.isRunning)
+      this.render(timestamp)
     })
     this.clrscr()
     this.renderMain(this)
     this.renderMask.forEach(mask => {
-      mask(timestamp, isRunning)
+      mask(timestamp, this.isRunning)
     })
   }
   run () {
     this.isRunning = true
     window.requestAnimationFrame((timestamp: number) => {
-      this.render(timestamp, this.isRunning)
+      this.render(timestamp)
     })
   }
   destory () {
