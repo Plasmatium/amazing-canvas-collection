@@ -42,13 +42,13 @@ export abstract class Canvas{
     ctx.fillRect(0, 0, windowW, windowH)
   }
   render (timestamp: number, isRunning: boolean) {
+    this.isRunning && window.requestAnimationFrame((timestamp: number) => {
+      this.render(timestamp, this.isRunning)
+    })
     this.clrscr()
     this.renderMain(this)
     this.renderMask.forEach(mask => {
       mask(timestamp, isRunning)
-    })
-    this.isRunning && window.requestAnimationFrame((timestamp: number) => {
-      this.render(timestamp, this.isRunning)
     })
   }
   run () {

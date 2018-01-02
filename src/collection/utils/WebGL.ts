@@ -1,5 +1,7 @@
 import { TransferParam } from "./others";
 
+let {random, round, floor, sin, cos, PI} = Math
+
 // 生成着色器方法，输入参数：渲染上下文，着色器类型，数据源
 export function generateGLShader(
   gl: WebGLRenderingContext,
@@ -51,6 +53,7 @@ export function jsArr2gRam (
 ) {
   gl.bindBuffer(target, buffer)
   gl.bufferData(target, data, usage)
+  gl.bindBuffer(target, null)
 }
 
 // 将着色程序中的属性指定到显存位置 (属性可以是已索引的，也可以提供着色程序和名称)
@@ -96,6 +99,7 @@ export function gRam2ShaderAttr (
   gl.bindBuffer(target, buffer)
   gl.vertexAttribPointer(attrIdx, size, type, normalize, stride, offset)
   gl.enableVertexAttribArray(attrIdx)
+  gl.bindBuffer(target, null)
 }
 
 export class GLScene {
@@ -117,3 +121,47 @@ export class GLScene {
   destory () {}
   onClick (e: MouseEvent) {}
 }
+
+// generator vertices
+export function genCircle (r: number, div: number = 12) {
+  let ret: number[] = []
+  let x = round(random()*200)
+  let y = round(random()*200)
+  for (let i=0; i<2*PI; i += 2*PI/div) {
+    ret.push(
+      Math.sin(i)*r + x,
+      Math.cos(i)*r + y
+    )
+  }
+  return ret
+}
+
+// for Donuts
+const circleList = [5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25]
+.map(r => {
+  return genCircle(r)
+})
+// circleList.length === 21
+export function genDonut () {
+  let outerIdx = floor(random() * 20 + 1) // [1, 20]
+  let innerIdx = outerIdx
+  while (innerIdx === outerIdx) innerIdx = floor(random()*outerIdx) // [0, outer]
+
+  let innerC = circleList[innerIdx]
+  let outerC = circleList[outerIdx]
+  console.log(innerIdx, outerIdx)
+  console.log(innerC)
+  console.log(outerC)
+
+  // flat zip two circle
+  let ret: number[] = []
+  for (let i=0; i<innerC.length; i+=2) {
+    ret.push(innerC[i], innerC[i+1], outerC[i], outerC[i+1])
+  }
+  ret.push(ret[0], ret[1], ret[2], ret[3]) // 闭合点
+  ret.push(ret[2], ret[3]) // 结尾化点
+  ret.unshift(ret[0], ret[1]) //开头的退化点，不能放前面，会改变index值
+  return ret
+}
+
+export const dd = [...genDonut(), ...genDonut()]
