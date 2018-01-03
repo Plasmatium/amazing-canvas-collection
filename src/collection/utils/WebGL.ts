@@ -166,8 +166,8 @@ export function genDonut (index: number) {
   let outerC = circleList[outerIdx]
 
   // debug position for x, y
-  let x = random()*150
-  let y = random()*150
+  let x = random()*300
+  let y = random()*300
 
   // flat zip two circle
   let ret: number[] = []
@@ -180,19 +180,69 @@ export function genDonut (index: number) {
   return ret
 }
 
-let count = 2
+interface TexParam {
+  level: number
+  internalFormat: number
+  width: number
+  height: number
+  border: number
+  format: number
+  type: number
+}
+export class DataFBO {
+  frameBuffer: WebGLFramebuffer | null
+  texture: WebGLTexture | null
+  constructor (private gl: WebGLRenderingContext) {
+    this.frameBuffer = gl.createFramebuffer()
+    this.texture = gl.createTexture()
+  }
+  loadData(data: Uint8Array | Float32Array){
+    let {gl, texture} = this
+
+    gl.getExtension('OES_texture_float')
+    gl.getExtension('OES_texture_float_linear')
+    gl.bindTexture(gl.TEXTURE_2D, texture)
+    /**
+     * refer to https://stackoverflow.com/questions/46262432/linear-filtering-of-floating-point-textures-in-webgl2
+     * and firefox console error
+     */
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+    gl.texImage2D(
+      gl.TEXTURE_2D,
+      0,
+      gl.RGBA,
+      data.length / 4,
+      1,
+      0,
+      gl.RGBA,
+      gl.FLOAT,
+      data
+    )
+  }
+}
+
+/**
+ * below is for testing
+ */
+
+let count = 3
 const _dd: number[] = []
 for(let i=0; i<count; i++) {
   _dd.push(...genDonut(i))
 }
 
-const _dt: number[] = [] //data texure
+let _dt: number[] = [] //data texure
+let data = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.0, 0.0]
 for(let i=0; i<count; i++) {
   let color = [random(), random(), random(), 1]
+  // let color = [1, 0, 1, 1]
+
   // data: [posX, posY, volX, volY, accX, accY, reserve, reserve]
-  let data = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.0, 0.0]
   _dt.push(...color, ...data)
 }
+_dt = [1,0,0,1,...data,0,1,0,1,...data,0,0,1,1,...data]
 
 export const dd = _dd
 export const dt = _dt

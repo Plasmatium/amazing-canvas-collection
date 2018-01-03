@@ -3,21 +3,25 @@
  * uniform类型变量，需要在gl.useProgram之后再传送值去显卡。
  */
 
-import {GLScene, generateGLProgram, jsArr2gRam, gRam2ShaderAttr, dd, dt} from './utils/WebGL'
+import {GLScene, generateGLProgram, jsArr2gRam, gRam2ShaderAttr, dd, dt, DataFBO} from './utils/WebGL'
 import { colorArray, TransferParam, randn_bm } from './utils/others'
 import { normalize } from 'path';
 
 const vsSrc = `
 uniform vec2 u_resolution;
+uniform sampler2D u_dataTexture;
+
 attribute vec3 a_position;
 // a_position.z is index
+
 varying float v_index;
 varying vec4 v_color;
 void main() {
   v_index = a_position.z;
-
+  vec4 color = texture2DLod(u_dataTexture, vec2(0.0, v_index*0.33), 0.0);
   vec2 clip = a_position.xy/u_resolution*2.0 - 1.0;
-  v_color = vec4(v_index, 0.4, 0.8, 1);
+  // v_color = vec4(v_index/10.0, 1.0-v_index/10.0, 0, 1);
+  v_color = color;
   gl_Position = vec4(clip, 0, 1);
 }
 `
@@ -35,7 +39,7 @@ const {random} = Math
 class GLColorfulDonut extends GLScene {
   public vertices: number[] = []
   public dataTexture: number[] = []
-  constructor (public bgColor: colorArray = [0, 0, 0, 0], count = 500) {
+  constructor (public bgColor: colorArray = [0.97, 0.96, 0.93, 1], count = 500) {
     super()
     let {windowW, windowH, gl} = this
     this.vertices = dd
@@ -54,13 +58,16 @@ class GLColorfulDonut extends GLScene {
     }
     // transfer vertices
     let vertices = new Float32Array(this.vertices)
+    // console.log(vertices)
     jsArr2gRam(gl, gl.ARRAY_BUFFER, positionsBuffer, vertices, gl.STATIC_DRAW)
     gRam2ShaderAttr(gl, gl.ARRAY_BUFFER, positionsBuffer, 'a_position', pointerConfig, program)
-
-
-
-    // transfer data texture
+    // transfer data texture; first get OES_texture_float
+    const fbo1 = new DataFBO(gl)
+    // gl.pixelStorei(gl.UNPACK_ALIGNMENT, 4)
+    let dataTexture = new Float32Array(this.dataTexture)
+    fbo1.loadData(dataTexture)
     
+    // ----------- //
     gl.useProgram(program)
     // transform uniform variable
     let u_resolutionLoc = gl.getUniformLocation(program, 'u_resolution')
