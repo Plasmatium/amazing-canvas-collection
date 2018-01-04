@@ -112,7 +112,7 @@ export abstract class GLScene {
   constructor () {
     let canvas = document.getElementsByTagName('canvas')[0]
     if (!canvas) throw Error('canvas not found')
-    let gl = canvas.getContext('webgl')
+    let gl = canvas.getContext('webgl', {alpha: false})
     if (!gl) throw Error('get webgl context failed')
 
     this.canvas = canvas
@@ -141,7 +141,7 @@ export abstract class GLScene {
 }
 
 // generator vertices
-export function genCircle (r: number, div: number = 20) {
+export function genCircle (r: number, div: number = 12) {
   let ret: number[] = []
   for (let i=0; i<2*PI; i += 2*PI/div) {
     ret.push(Math.sin(i)*r, Math.cos(i)*r)
@@ -227,22 +227,22 @@ export class DataFBO {
  * below is for testing
  */
 
-let count = 3
+let count = 300
 const _dd: number[] = []
 for(let i=0; i<count; i++) {
   _dd.push(...genDonut(i))
 }
 
 let _dt: number[] = [] //data texure
-let data = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.0, 0.0]
+let data = [1, 0, 0, 1, 1, 0, 0, 1]
 for(let i=0; i<count; i++) {
-  let color = [random(), random(), random(), 1]
+  let color = [random(), random(), random(), random()]
   // let color = [1, 0, 1, 1]
 
   // data: [posX, posY, volX, volY, accX, accY, reserve, reserve]
   _dt.push(...color, ...data)
 }
-_dt = [1,0,0,1,...data,0,1,0,1,...data,0,0,1,1,...data]
+// _dt = [.3,.5,.9,1,...data,1,0,0,1,...data,0,0,1,1,...data]
 
 export const dd = _dd
 export const dt = _dt
