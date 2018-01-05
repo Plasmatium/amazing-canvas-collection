@@ -3,7 +3,7 @@
  * uniform类型变量，需要在gl.useProgram之后再传送值去显卡。
  */
 
-import {GLScene, generateGLProgram, jsArr2gRam, gRam2ShaderAttr, DataFBO, genDonut} from './utils/WebGL'
+import {GLScene, generateGLProgram, jsArr2gRam, gRam2ShaderAttr, DataFBO, genDonut, PingPongMGR} from './utils/WebGL'
 import { colorArray, TransferParam, randn_bm } from './utils/others'
 import { normalize } from 'path';
 
@@ -12,7 +12,7 @@ const vsSrc = `
 uniform vec2 u_resolution;
 uniform float u_totalCount;
 uniform sampler2D u_dataTextureIn;
-uniform sampler2D u_dataTextureOut;
+uniform int u_control;
 
 attribute vec3 a_position;
 // a_position.z is index
@@ -82,8 +82,9 @@ for(let i=0; i<count; i++) {
 class GLColorfulDonut extends GLScene {
   private vertices: number[] = []
   private dataTexture: number[] = []
-  private fboPing: DataFBO
-  private fboPong: DataFBO
+  // private fboPing: DataFBO
+  // private fboPong: DataFBO
+  private ppm: PingPongMGR
   private texIdxSwitcher: boolean = false // this is for fbo ping pong switch
   constructor (public bgColor: colorArray = [0.97, 0.96, 0.93, 1], count = 500) {
     super()
@@ -95,6 +96,7 @@ class GLColorfulDonut extends GLScene {
      * init shader this.program
      */
     this.program = generateGLProgram(gl, vsSrc, fsSrc)
+
     let positionsBuffer = gl.createBuffer()
 
     let pointerConfig = {
@@ -128,17 +130,23 @@ class GLColorfulDonut extends GLScene {
     let dataTexture = new Uint8Array(this.dataTexture)
     let width = dataTexture.length / 4
     let height = 1
-    let texIdx = 0
-    let dataType = gl.UNSIGNED_BYTE
-    this.fboPing = new DataFBO(gl, dataType, width, height, texIdx)
-    gl.pixelStorei(gl.UNPACK_ALIGNMENT, 8)
-    this.fboPing.loadData(dataTexture)
-    
-    //setup pong fbo, default texture index 1
-    // switch this.texIdxSwitcher for running with ping pong fbo mode
-    texIdx = 1
-    this.fboPong = new DataFBO(gl, dataType, width, height, texIdx)
-    this.fboPong.loadData(null) // data is null, rending into this texture
+    // let texIdx = 0
+    // let dataType = gl.UNSIGNED_BYTE
+    // this.fboPing = new DataFBO(gl, dataType, width, height, texIdx)
+    // gl.pixelStorei(gl.UNPACK_ALIGNMENT, 8)
+    // this.fboPing.loadData(dataTexture)
+
+    // //setup pong fbo, default texture index 1
+    // // switch this.texIdxSwitcher for running with ping pong fbo mode
+    // texIdx = 1
+    // this.fboPong = new DataFBO(gl, dataType, width, height, texIdx)
+    // this.fboPong.loadData(null) // data is null, rending into this texture
+
+    /**
+     * setup PingPongManager
+     */
+    this.ppm = new PingPongMGR(gl, width, height, gl.UNSIGNED_BYTE)
+    this.ppm.initPing(dataTexture)
 
     /**
      * enable transparent alpha blend
@@ -152,7 +160,6 @@ class GLColorfulDonut extends GLScene {
      * rolling on
      */
     gl.useProgram(this.program)
-
     // transform uniform variable
     let u_resolutionLoc = gl.getUniformLocation(this.program, 'u_resolution')
     let u_totalCount = gl.getUniformLocation(this.program, 'u_totalCount')
@@ -166,16 +173,18 @@ class GLColorfulDonut extends GLScene {
     let {gl, bgColor, windowW, windowH} = this
     let [r, g, b, a] = bgColor
 
-    // set texture index to zero (current ping fbo)
-    let texIdx = Number(this.texIdxSwitcher)
-    let u_dataTextureIn_loc = gl.getUniformLocation(this.program, 'u_dataTextureIn')
-    gl.uniform1i(u_dataTextureIn_loc, texIdx)
+    // // set texture index to zero (current ping fbo)
+    // let texIdx = Number(this.texIdxSwitcher)
+    // let u_dataTextureIn_loc = gl.getUniformLocation(this.program, 'u_dataTextureIn')
+    // gl.uniform1i(u_dataTextureIn_loc, texIdx)
+    this.ppm.enablePing()
 
     // draw
     gl.viewport(0, 0, windowW, windowH)
     gl.clearColor(r, g, b, a)
     gl.clear(gl.COLOR_BUFFER_BIT)
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, this.vertices.length / 3)
+    debugger
   }
 }
 

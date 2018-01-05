@@ -182,6 +182,7 @@ export function genDonut (index: number) {
   return ret
 }
 
+// DataFBO should be deprecated ----------!
 export class DataFBO {
   frameBuffer: WebGLFramebuffer | null
   texture: WebGLTexture | null
@@ -228,5 +229,83 @@ export class DataFBO {
     let {gl, texture, texIdx} = this
     gl.activeTexture(gl.TEXTURE0 + texIdx)
     gl.bindTexture(gl.TEXTURE_2D, texture)
+  }
+}
+
+/**
+ * first bind to texPing, render to screen
+ * second bind to texPong, bind frameBuffer, render to texPong
+ * then swap texPing and texPong
+ * 
+ * in texture data, use reserved data bytes to control
+ * if should discard in shader program
+ * (retransfer vertices to GPU is slow, it takes about 0.5~1.5ms)
+ */
+export class PingPongMGR {
+  private texPing: WebGLTexture | null
+  private texPong: WebGLTexture | null
+  private frameBuffer: WebGLFramebuffer | null
+  private u_control_loc: number | null
+  constructor (
+    private gl: WebGLRenderingContext,
+    private width: number,
+    private height: number,
+    private dataType: number
+  ) {
+    this.texPing = gl.createTexture()
+    this.texPong = gl.createTexture()
+    this.frameBuffer = gl.createFramebuffer()
+  }
+  initData (
+    data: Uint8Array | Float32Array | null,
+    tex: WebGLTexture | null
+  ) {
+    let {gl} = this
+    gl.bindTexture(gl.TEXTURE_2D, tex)
+    
+    if (this.dataType === gl.FLOAT) {
+      gl.getExtension('OES_texture_float')
+      gl.getExtension('OES_texture_float_linear')
+    }
+    /**
+     * refer to https://stackoverflow.com/questions/46262432/linear-filtering-of-floating-point-textures-in-webgl2
+     * and firefox console error
+     */
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+    gl.texImage2D(
+      gl.TEXTURE_2D,
+      0,
+      gl.RGBA,
+      this.width,
+      this.height,
+      0,
+      gl.RGBA,
+      this.dataType,
+      data
+    )
+  }
+  initPing (data: Uint8Array | Float32Array) { this.initData(data, this.texPing) }
+  initPong () { this.initData(null, this.texPong) }
+  enablePing () {
+    // render to screen from using texPing
+    let {gl, texPing} = this
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null)
+    gl.bindTexture(gl.TEXTURE_2D, texPing)
+    gl.uniform1i(this.u_control_loc, 1) // 1 stands for rendering to screen
+  }
+  enablePong () {
+    // render to texPong into frameBuffer
+    let {gl, texPong, frameBuffer} = this
+    gl.bindFramebuffer(gl.FRAMEBUFFER, frameBuffer)
+    const attachmentPoing = gl.COLOR_ATTACHMENT0
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, attachmentPoing, gl.TEXTURE_2D, texPong, 0)
+    gl.uniform1i(this.u_control_loc, 0) // 0 stands form rendering to texPong
+  }
+  swapPingPong () {
+    let tmp = this.texPing
+    this.texPing = this.texPong
+    this.texPong = tmp
   }
 }
