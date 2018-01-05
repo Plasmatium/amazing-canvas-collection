@@ -104,7 +104,7 @@ export function gRam2ShaderAttr (
 }
 
 export abstract class GLScene {
-  public programs: {[progName: string]: WebGLProgram} = {}
+  public program: WebGLProgram | null = null
   public canvas: HTMLCanvasElement
   protected gl: WebGLRenderingContext
   isRunning: boolean = false
@@ -136,12 +136,14 @@ export abstract class GLScene {
     this.isRunning = true
     window.requestAnimationFrame(ts => this.render(ts))
   }
-  destory () {}
+  destory () {
+    this.isRunning = false
+  }
   onClick (e: MouseEvent) {}
 }
 
 // generator vertices
-export function genCircle (r: number, div: number = 12) {
+export function genCircle (r: number, div: number = 32) {
   let ret: number[] = []
   for (let i=0; i<2*PI; i += 2*PI/div) {
     ret.push(Math.sin(i)*r, Math.cos(i)*r)
@@ -180,28 +182,29 @@ export function genDonut (index: number) {
   return ret
 }
 
-interface TexParam {
-  level: number
-  internalFormat: number
-  width: number
-  height: number
-  border: number
-  format: number
-  type: number
-}
 export class DataFBO {
   frameBuffer: WebGLFramebuffer | null
   texture: WebGLTexture | null
-  constructor (private gl: WebGLRenderingContext) {
+  constructor (
+    private gl: WebGLRenderingContext,
+    private type: number,
+    private width: number,
+    private height: number,
+    public texIdx: number
+  ) {
     this.frameBuffer = gl.createFramebuffer()
     this.texture = gl.createTexture()
   }
-  loadData(data: Uint8Array | Float32Array){
+  loadData(
+    data: Uint8Array | Float32Array | null,
+  ) {
     let {gl, texture} = this
-
-    gl.getExtension('OES_texture_float')
-    gl.getExtension('OES_texture_float_linear')
-    gl.bindTexture(gl.TEXTURE_2D, texture)
+    this.activeNBindTexture()
+    
+    if (this.type === gl.FLOAT) {
+      gl.getExtension('OES_texture_float')
+      gl.getExtension('OES_texture_float_linear')
+    }
     /**
      * refer to https://stackoverflow.com/questions/46262432/linear-filtering-of-floating-point-textures-in-webgl2
      * and firefox console error
@@ -213,36 +216,17 @@ export class DataFBO {
       gl.TEXTURE_2D,
       0,
       gl.RGBA,
-      data.length / 4,
-      1,
+      this.width,
+      this.height,
       0,
       gl.RGBA,
-      gl.FLOAT,
+      this.type,
       data
     )
   }
+  activeNBindTexture() {
+    let {gl, texture, texIdx} = this
+    gl.activeTexture(gl.TEXTURE0 + texIdx)
+    gl.bindTexture(gl.TEXTURE_2D, texture)
+  }
 }
-
-/**
- * below is for testing
- */
-
-let count = 300
-const _dd: number[] = []
-for(let i=0; i<count; i++) {
-  _dd.push(...genDonut(i))
-}
-
-let _dt: number[] = [] //data texure
-let data = [1, 0, 0, 1, 1, 0, 0, 1]
-for(let i=0; i<count; i++) {
-  let color = [random(), random(), random(), random()]
-  // let color = [1, 0, 1, 1]
-
-  // data: [posX, posY, volX, volY, accX, accY, reserve, reserve]
-  _dt.push(...color, ...data)
-}
-// _dt = [.3,.5,.9,1,...data,1,0,0,1,...data,0,0,1,1,...data]
-
-export const dd = _dd
-export const dt = _dt
