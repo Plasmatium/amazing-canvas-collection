@@ -31,17 +31,31 @@ varying float v_index;
 varying vec4 v_color;
 
 void main() {
-  v_index = float(int(a_position.z/u_idxStride));
-  v_color = texture2DLod(u_dataTextureIn, vec2(v_index*1.0/u_totalCount, 0.0), 1.0);
+  if (1 == u_control) {
+    v_index = float(int(a_position.z/u_idxStride));
+    v_color = texture2DLod(u_dataTextureIn, vec2(v_index*1.0/u_totalCount, 0.0), 1.0);
 
-  if (bool(u_control)) {
     vec2 clip = a_position.xy/u_resolution*2.0 - 1.0;
 
     gl_Position = vec4(clip, 0, 1);
-  } else {
+  }
+
+  if (0 == u_control) {
+    // decay color
+    // each sector is 32B / 4B, color offset is 0
+    // divide 4 stands for rgba, 4 value one group(pixel)
+    v_index = a_position.z * 32.0 / 4.0 + 0.0;
+
+    // normalize to [-1,1], total width = u_totalCount * 32 / 4
+    // divide 4 stands for rgba, 4 value one group(pixel)
+    float width = u_totalCount * 32.0 / 4.0;
+    v_index = v_index / (width / 2.0) -1.0;
+
+    v_color = texture2DLod(u_dataTextureIn, vec2(v_index, 0.0), 1.0);
     v_color.a *= 0.999;
 
-    gl_Position = vec4(v_index/u_totalCount, 0, 0, 1);
+    // a_position.z is for texture coord, is the data texture's data index
+    gl_Position = vec4(v_index, 0, 0, 1);
   }
 }
 `
@@ -58,13 +72,14 @@ void main() {
 const {random} = Math
 
 class GLColorfulDonut extends GLScene {
-  private vertices: number[] = []
-  private dataTexture: number[] = []
+  private vertices: Float32Array
+  private dataTexture: Uint8Array
   // private fboPing: DataFBO
   // private fboPong: DataFBO
   private ppm: PingPongMGR
   private texIdxSwitcher: boolean = false // this is for fbo ping pong switch
   private idxStride: number
+  private u_control_loc: WebGLUniformLocation | null
   constructor (
     public bgColor: colorArray,
     private count: number,
@@ -79,14 +94,18 @@ class GLColorfulDonut extends GLScene {
     let {windowW, windowH, gl} = this
     const idxGen = new IndexGen()
 
-    // dd中的index可能错乱，但是没关系，在一个周期内，index就这些。
-    // 比如在周期8以内，可能出现60123457，因为6是unshift的结果，7是push的结果
-    this.vertices = []
+    const vertices = []
     for (let i=0; i<count; i++) {
-      this.vertices.push(...genDonut(idxGen, circleList))
+      vertices.push(...genDonut(circleList))
     }
+    // then fill index
+    // [posX, posY, idx, posX, posY, idx, ...]
+    for (let i=0; i<vertices.length; i+=3) {
+      vertices[i+2] = idxGen.pullIdx()
+    }
+    this.vertices = new Float32Array(vertices)
 
-    this.dataTexture = []
+    const dataTexture: number[] = []
     /**
      * data type: unsigned byte
      * [r,g,b,a,        // 4 bytes
@@ -115,9 +134,10 @@ class GLColorfulDonut extends GLScene {
       // let color = [1, 0, 1, 1]
 
       // data: [posX, posY, volX, volY, accX, accY, reserve, reserve], uint32
-      this.dataTexture.push(...color, ...data)
+      dataTexture.push(...color, ...data)
     }
-
+    this.dataTexture = new Uint8Array(dataTexture)
+    console.log(this.dataTexture)
     
     /** 
      * 顶点数组结构：
@@ -148,8 +168,7 @@ class GLColorfulDonut extends GLScene {
     /**
      * transfer vertices geometry
      */
-    let vertices = new Float32Array(this.vertices)
-    jsArr2gRam(gl, gl.ARRAY_BUFFER, positionsBuffer, vertices, gl.STATIC_DRAW)
+    jsArr2gRam(gl, gl.ARRAY_BUFFER, positionsBuffer, this.vertices, gl.STATIC_DRAW)
     gRam2ShaderAttr(gl, gl.ARRAY_BUFFER, positionsBuffer, 'a_position', pointerConfig, this.program)
 
     /**
@@ -162,18 +181,18 @@ class GLColorfulDonut extends GLScene {
      * accX*4B, accY*4B,  // 8 bytes
      * reserve_32b]     // 4 bytes
      * total 32 bytes
-     * 因为format是gl.RGBA，一个宽度是4byte，
+     * 因为format是gl.RGBA，一个宽度是4B，
      * 所以texture宽度要设为dataTexture.length / 4
      */
-    let dataTexture = new Uint8Array(this.dataTexture)
-    let width = dataTexture.length / 4
+    let width = this.dataTexture.length / 4
     let height = 1
     /**
      * setup PingPongManager
      */
-    let u_control_loc = gl.getUniformLocation(this.program, 'u_control')
-    this.ppm = new PingPongMGR(gl, width, height, gl.UNSIGNED_BYTE, u_control_loc)
-    this.ppm.initPing(dataTexture)
+    this.u_control_loc = gl.getUniformLocation(this.program, 'u_control')
+    this.ppm = new PingPongMGR(gl, width, height, gl.UNSIGNED_BYTE, this.u_control_loc)
+    this.ppm.initPing(this.dataTexture)
+    this.ppm.initPong()
 
     /**
      * enable transparent alpha blend
@@ -196,24 +215,26 @@ class GLColorfulDonut extends GLScene {
     gl.uniform2f(u_resolutionLoc, windowW, windowH)
     // in this data texture, each donut index has 32 bytes data,
     // 4B color, 8B pos, 8B vol, 8B acc, 4B reserve, total 32B
-    gl.uniform1f(u_totalCount, dataTexture.length / 32)
+    gl.uniform1f(u_totalCount, this.dataTexture.length / 32)
     gl.uniform1f(u_idxStride, this.idxStride)    
   }
   renderMain (timestamp: number) {
     let {gl, bgColor, windowW, windowH} = this
     let [r, g, b, a] = bgColor
 
-    // // set texture index to zero (current ping fbo)
-    // let texIdx = Number(this.texIdxSwitcher)
-    // let u_dataTextureIn_loc = gl.getUniformLocation(this.program, 'u_dataTextureIn')
-    // gl.uniform1i(u_dataTextureIn_loc, texIdx)
     this.ppm.enablePing()
-
-    // draw
     gl.viewport(0, 0, windowW, windowH)
     gl.clearColor(r, g, b, a)
     gl.clear(gl.COLOR_BUFFER_BIT)
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, this.vertices.length / 3)
+
+    this.ppm.enablePong()
+    let width = this.dataTexture.length / 4
+    gl.viewport(0, 0, width, 1)
+    gl.clearColor(0, 0, 0, 0)
+    gl.clear(gl.COLOR_BUFFER_BIT)
+    gl.drawArrays(gl.POINTS, 0, this.count)
+    this.ppm.swapPingPong()
   }
 }
 

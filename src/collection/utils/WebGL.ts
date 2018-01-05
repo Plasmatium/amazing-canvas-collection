@@ -182,7 +182,6 @@ export class IndexGen {
   pullIdx() { return this.idx++ }
 }
 export function genDonut (
-  idxGen: IndexGen,
   circleList: number[][]
 ) {
   let len = circleList.length
@@ -205,15 +204,15 @@ export function genDonut (
     ret.push(
       innerC[i]+x,
       innerC[i+1]+y,
-      idxGen.pullIdx(),
+      0,
       outerC[i]+x,
       outerC[i+1]+y,
-      idxGen.pullIdx()
+      0
     )
   }
-  ret.push(ret[0], ret[1], idxGen.pullIdx(), ret[3], ret[4], idxGen.pullIdx()) // 闭合点
-  ret.push(ret[3], ret[4], idxGen.pullIdx()) // 结尾化点
-  ret.unshift(ret[0], ret[1], idxGen.pullIdx()) //开头的退化点，不能放前面，会改变index值
+  ret.push(ret[0], ret[1], 0, ret[3], ret[4], 0) // 闭合点
+  ret.push(ret[3], ret[4], 0) // 结尾化点
+  ret.unshift(ret[0], ret[1], 0) //开头的退化点，不能放前面，会改变index值
   return ret
 }
 
@@ -284,8 +283,8 @@ export class PingPongMGR {
     // render to texPong into frameBuffer
     let {gl, texPong, frameBuffer} = this
     gl.bindFramebuffer(gl.FRAMEBUFFER, frameBuffer)
-    const attachmentPoing = gl.COLOR_ATTACHMENT0
-    gl.framebufferTexture2D(gl.FRAMEBUFFER, attachmentPoing, gl.TEXTURE_2D, texPong, 0)
+    const attachmentPoint = gl.COLOR_ATTACHMENT0
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, attachmentPoint, gl.TEXTURE_2D, texPong, 0)
     gl.uniform1i(this.u_control_loc, 0) // 0 stands form rendering to texPong
   }
   swapPingPong () {
