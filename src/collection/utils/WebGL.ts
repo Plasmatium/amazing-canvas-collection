@@ -112,7 +112,10 @@ export abstract class GLScene {
   constructor () {
     let canvas = document.getElementsByTagName('canvas')[0]
     if (!canvas) throw Error('canvas not found')
-    let gl = canvas.getContext('webgl', {alpha: false})
+    let gl = canvas.getContext('webgl', {
+      alpha: false, // make canvas backdrop opaque, which speed up rendering
+      // antialias: true
+    })
     if (!gl) throw Error('get webgl context failed')
 
     this.canvas = canvas
@@ -143,22 +146,45 @@ export abstract class GLScene {
 }
 
 // generator vertices
-export function genCircle (r: number, div: number = 32) {
+export function genCircle (
+  r: number,
+  precision: number
+) {
   let ret: number[] = []
-  for (let i=0; i<2*PI; i += 2*PI/div) {
+  for (let i=0; i<2*PI; i += 2*PI/precision) {
     ret.push(Math.sin(i)*r, Math.cos(i)*r)
   }
   return ret
 }
 
-// for Donuts
-const circleList = [5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23]
-.map(r => {
-  return genCircle(r)
-})
+export function genCircleList (
+  start: number,
+  end: number,
+  step: number,
+  precision: number
+) {
+  const circleList = []
+  for (let i=start; i<end; i += step) {
+    circleList.push(i)
+  }
+  
+  return circleList.map(r => {
+    return genCircle(r, Math.floor(precision))
+  })
+}
 
-// param index for donut uniform index
-export function genDonut (index: number) {
+// param startIdx for donut uniform startIdx
+export class IndexGen {
+  private idx: number = 0
+  constructor () {}
+  resetIdx () { this.idx = 0 }
+  currIdx () { return this.idx }
+  pullIdx() { return this.idx++ }
+}
+export function genDonut (
+  idxGen: IndexGen,
+  circleList: number[][]
+) {
   let len = circleList.length
   let outerIdx = floor(random() * (len-1) + 1) // [1, len-1]
   let innerIdx = outerIdx
@@ -172,64 +198,23 @@ export function genDonut (index: number) {
   let y = random()*300
 
   // flat zip two circle
+  // pingpong渲染到texture时，只渲染donut第一个坐标
   let ret: number[] = []
-  for (let i=0; i<innerC.length; i+=2) {
-    ret.push(innerC[i]+x, innerC[i+1]+y, index, outerC[i]+x, outerC[i+1]+y, index)
-  }
-  ret.push(ret[0], ret[1], index, ret[3], ret[4], index) // 闭合点
-  ret.push(ret[3], ret[4], index) // 结尾化点
-  ret.unshift(ret[0], ret[1], index) //开头的退化点，不能放前面，会改变index值
-  return ret
-}
-
-// DataFBO should be deprecated ----------!
-export class DataFBO {
-  frameBuffer: WebGLFramebuffer | null
-  texture: WebGLTexture | null
-  constructor (
-    private gl: WebGLRenderingContext,
-    private type: number,
-    private width: number,
-    private height: number,
-    public texIdx: number
-  ) {
-    this.frameBuffer = gl.createFramebuffer()
-    this.texture = gl.createTexture()
-  }
-  loadData(
-    data: Uint8Array | Float32Array | null,
-  ) {
-    let {gl, texture} = this
-    this.activeNBindTexture()
-    
-    if (this.type === gl.FLOAT) {
-      gl.getExtension('OES_texture_float')
-      gl.getExtension('OES_texture_float_linear')
-    }
-    /**
-     * refer to https://stackoverflow.com/questions/46262432/linear-filtering-of-floating-point-textures-in-webgl2
-     * and firefox console error
-     */
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-    gl.texImage2D(
-      gl.TEXTURE_2D,
-      0,
-      gl.RGBA,
-      this.width,
-      this.height,
-      0,
-      gl.RGBA,
-      this.type,
-      data
+  len = innerC.length
+  for (let i=0; i<len; i+=2) {
+    ret.push(
+      innerC[i]+x,
+      innerC[i+1]+y,
+      idxGen.pullIdx(),
+      outerC[i]+x,
+      outerC[i+1]+y,
+      idxGen.pullIdx()
     )
   }
-  activeNBindTexture() {
-    let {gl, texture, texIdx} = this
-    gl.activeTexture(gl.TEXTURE0 + texIdx)
-    gl.bindTexture(gl.TEXTURE_2D, texture)
-  }
+  ret.push(ret[0], ret[1], idxGen.pullIdx(), ret[3], ret[4], idxGen.pullIdx()) // 闭合点
+  ret.push(ret[3], ret[4], idxGen.pullIdx()) // 结尾化点
+  ret.unshift(ret[0], ret[1], idxGen.pullIdx()) //开头的退化点，不能放前面，会改变index值
+  return ret
 }
 
 /**
@@ -245,12 +230,12 @@ export class PingPongMGR {
   private texPing: WebGLTexture | null
   private texPong: WebGLTexture | null
   private frameBuffer: WebGLFramebuffer | null
-  private u_control_loc: number | null
   constructor (
     private gl: WebGLRenderingContext,
     private width: number,
     private height: number,
-    private dataType: number
+    private dataType: number,
+    private u_control_loc: WebGLUniformLocation | null
   ) {
     this.texPing = gl.createTexture()
     this.texPong = gl.createTexture()
