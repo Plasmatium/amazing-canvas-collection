@@ -185,16 +185,16 @@ export function genDonut (
   circleList: number[][]
 ) {
   let len = circleList.length
-  let outerIdx = floor(random() * (len-1) + 1) // [1, len-1]
+  let outerIdx = floor(random() * (len-len/2) + len/2) // [1, len-1]
   let innerIdx = outerIdx
-  while (innerIdx === outerIdx) innerIdx = floor(random()*outerIdx) // [0, outer]
+  while (outerIdx - innerIdx <= 10) innerIdx = floor(random()*outerIdx) // [0, outer]
 
   let innerC = circleList[innerIdx]
   let outerC = circleList[outerIdx]
 
   // debug position for x, y
-  let x = random()*300
-  let y = random()*300
+  let x = 0
+  let y = 0
 
   // flat zip two circle
   // pingpong渲染到texture时，只渲染donut第一个坐标
@@ -277,19 +277,52 @@ export class PingPongMGR {
     let {gl, texPing} = this
     gl.bindFramebuffer(gl.FRAMEBUFFER, null)
     gl.bindTexture(gl.TEXTURE_2D, texPing)
-    gl.uniform1i(this.u_control_loc, 1) // 1 stands for rendering to screen
+    gl.uniform1i(this.u_control_loc, 0) // 1 stands for rendering to screen
   }
   enablePong () {
     // render to texPong into frameBuffer
-    let {gl, texPong, frameBuffer} = this
+    let {gl, texPong, texPing, frameBuffer} = this
     gl.bindFramebuffer(gl.FRAMEBUFFER, frameBuffer)
+    gl.bindTexture(gl.TEXTURE_2D, texPing) // data from ping, draw to pong
     const attachmentPoint = gl.COLOR_ATTACHMENT0
     gl.framebufferTexture2D(gl.FRAMEBUFFER, attachmentPoint, gl.TEXTURE_2D, texPong, 0)
-    gl.uniform1i(this.u_control_loc, 0) // 0 stands form rendering to texPong
+    gl.uniform1i(this.u_control_loc, 1) // 0 stands form rendering to texPong
   }
   swapPingPong () {
     let tmp = this.texPing
     this.texPing = this.texPong
     this.texPong = tmp
   }
+  readTexture (id: 0|1) {
+    let {gl, texPing, texPong, frameBuffer} = this
+    let tex = id ? texPing : texPong
+    gl.bindFramebuffer(gl.FRAMEBUFFER, frameBuffer)
+    const attachmentPoint = gl.COLOR_ATTACHMENT0
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, attachmentPoint, gl.TEXTURE_2D, tex, 0)
+    
+    const pixels = new Uint8Array(this.width * 4) // *4 for rgba, 4 channel
+    gl.readPixels(0, 0, this.width, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixels)
+    pixels.reduce((acc: number[], val, idx) => {
+      if (idx % 4 === 3) {
+        console.log([...acc, val])
+        return []
+      } else {
+        return [...acc, val]
+      }
+    }, [])
+  }
+}
+
+export function float2U8 (num: number) {
+  if (num >= 1) {
+    console.error(`f: ${num} is larger then 1`)
+    return [0xcd, 0xcd, 0xcd, 0xcd]
+  }
+  let str = Math.floor(num*0xffffffff).toString(16).padStart(8, '0')
+  let ret: number[] = []
+  for (let i=0; i<4; i++) {
+    let tmp = Number('0x' + str.slice(i*2, i*2+2))
+    ret.push(tmp)
+  }
+  return ret
 }

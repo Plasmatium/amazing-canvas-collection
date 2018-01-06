@@ -11,11 +11,12 @@ import {
   genDonut,
   PingPongMGR,
   genCircleList,
-  IndexGen
+  IndexGen,
+  float2U8
 } from './utils/WebGL'
 import { colorArray, TransferParam, randn_bm } from './utils/others'
-import { normalize } from 'path';
 
+let g_ = 1
 // texture2DLod 最后参数1.0是不使用插值，直接使用raw值。
 const vsSrc = `
 uniform vec2 u_resolution;
@@ -31,31 +32,41 @@ varying float v_index;
 varying vec4 v_color;
 
 void main() {
-  if (1 == u_control) {
+  if (0 == u_control) {
+    // v_index first cut off to integrate number
     v_index = float(int(a_position.z/u_idxStride));
-    v_color = texture2DLod(u_dataTextureIn, vec2(v_index*1.0/u_totalCount, 0.0), 1.0);
+    v_index = v_index/u_totalCount; // [0.0, 1.0]
+    v_color = texture2DLod(u_dataTextureIn, vec2(v_index, 0.0), 1.0);
 
     vec2 clip = a_position.xy/u_resolution*2.0 - 1.0;
 
     gl_Position = vec4(clip, 0, 1);
+    return;
   }
 
-  if (0 == u_control) {
+  if (1 == u_control) {
     // decay color
     // each sector is 32B / 4B, color offset is 0
     // divide 4 stands for rgba, 4 value one group(pixel)
-    v_index = a_position.z * 32.0 / 4.0 + 0.0;
+    // +0.05 is a tiny positive offset to let GPU catch 
+    // the right index, or it would catch previous index
+    v_index = a_position.z * 32.0 / 4.0 + 0.05;
 
     // normalize to [-1,1], total width = u_totalCount * 32 / 4
     // divide 4 stands for rgba, 4 value one group(pixel)
     float width = u_totalCount * 32.0 / 4.0;
-    v_index = v_index / (width / 2.0) -1.0;
+    float ping_index = v_index / width; // scalar to [0,1], for texture
+    float pong_index = v_index / width * 2.0 - 1.0; // scalar to [-1,1], for renderer
 
-    v_color = texture2DLod(u_dataTextureIn, vec2(v_index, 0.0), 1.0);
-    v_color.a *= 0.999;
+    v_color = texture2DLod(u_dataTextureIn, vec2(ping_index, 0.0), 1.0);
+    v_color.rgba -= 0.01;
 
     // a_position.z is for texture coord, is the data texture's data index
-    gl_Position = vec4(v_index, 0, 0, 1);
+    gl_Position = vec4(pong_index, 0, 0, 1);
+  }
+
+  if (2 == u_control) {
+
   }
 }
 `
@@ -117,16 +128,16 @@ class GLColorfulDonut extends GLScene {
      */
     let data = [
       // color = rgba, 4B
-      0, 0, 0, 0, // posX*4B
-      0, 0, 0, 0, // posY*4B
+      16,17,18,19, // posX*4B
+      26,27,28,29, // posY*4B
 
-      0, 0, 0, 0, // volX*4B
-      0, 0, 0, 0, // volY*4B
+      36,37,38,39, // volX*4B
+      46,47,48,49,// volY*4B
 
-      0, 0, 0, 0, // accX*4B
-      0, 0, 0, 0, // accY*4B
+      56,57,58,59,// accX*4B
+      66,67,68,69,// accY*4B
 
-      0, 0, 0, 0  // reserve_32b = 4B
+      76,77,78,79,  // reserve_32b = 4B
       // total: 32B
     ]
     for (let i = 0; i < count; i++) {
@@ -134,8 +145,23 @@ class GLColorfulDonut extends GLScene {
       // let color = [1, 0, 1, 1]
 
       // data: [posX, posY, volX, volY, accX, accY, reserve, reserve], uint32
+      let x = 800 / this.windowW
+      let y = 600 / this.windowH
+      let dataX = float2U8(x)
+      let dataY = float2U8(y)
+      dataX.forEach((d, idx) => {
+        data[idx] = d
+      })
+      dataY.forEach((d, idx) => {
+        data[idx+4] = d
+      })
       dataTexture.push(...color, ...data)
     }
+    //---debug
+    // dataTexture[0]=255;dataTexture[1]=0;dataTexture[2]=0;
+    // dataTexture[32]=0;dataTexture[33]=255;dataTexture[34]=0;
+    // dataTexture[64]=0;dataTexture[65]=0;dataTexture[66]=255;
+    //---debug
     this.dataTexture = new Uint8Array(dataTexture)
     console.log(this.dataTexture)
     
@@ -183,6 +209,7 @@ class GLColorfulDonut extends GLScene {
      * total 32 bytes
      * 因为format是gl.RGBA，一个宽度是4B，
      * 所以texture宽度要设为dataTexture.length / 4
+     * dataTexture.length / 4 === donutCount * 8
      */
     let width = this.dataTexture.length / 4
     let height = 1
@@ -222,6 +249,7 @@ class GLColorfulDonut extends GLScene {
     let {gl, bgColor, windowW, windowH} = this
     let [r, g, b, a] = bgColor
 
+    gl.enable(gl.BLEND)
     this.ppm.enablePing()
     gl.viewport(0, 0, windowW, windowH)
     gl.clearColor(r, g, b, a)
@@ -229,11 +257,22 @@ class GLColorfulDonut extends GLScene {
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, this.vertices.length / 3)
 
     this.ppm.enablePong()
-    let width = this.dataTexture.length / 4
+    gl.disable(gl.BLEND)
+    let width = this.count * 8
     gl.viewport(0, 0, width, 1)
     gl.clearColor(0, 0, 0, 0)
     gl.clear(gl.COLOR_BUFFER_BIT)
+    
+    // deal with color
+    gl.uniform1i(this.u_control_loc, 1)
     gl.drawArrays(gl.POINTS, 0, this.count)
+
+    // deal with donut position
+    gl.uniform1i(this.u_control_loc, 2)
+    gl.drawArrays(gl.POINTS, 0, this.count)
+
+    // clear binding framebuffer
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null)
     this.ppm.swapPingPong()
   }
 }
