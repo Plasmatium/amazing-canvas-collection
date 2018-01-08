@@ -28,10 +28,10 @@ uniform float u_idxStride;
 // a_position.z is index
 attribute vec3 a_position;
 
-varying float v_index;
 varying vec4 v_color;
 
 void main() {
+  float v_index;
   if (0 == u_control) {
     // v_index first cut off to integrate number
     v_index = float(int(a_position.z/u_idxStride));
@@ -50,19 +50,19 @@ void main() {
     // divide 4 stands for rgba, 4 value one group(pixel)
     // +0.05 is a tiny positive offset to let GPU catch 
     // the right index, or it would catch previous index
-    v_index = a_position.z * 32.0 / 4.0 + 0.05;
+    v_index = a_position.z / u_totalCount; // [0.0, 1.0]
 
     // normalize to [-1,1], total width = u_totalCount * 32 / 4
     // divide 4 stands for rgba, 4 value one group(pixel)
-    float width = u_totalCount * 32.0 / 4.0;
-    float ping_index = v_index / width; // scalar to [0,1], for texture
-    float pong_index = v_index / width * 2.0 - 1.0; // scalar to [-1,1], for renderer
+    float ping_index = v_index;
+    float pong_index = v_index * 2.0 - 1.0; // scalar to [-1,1], for renderer
 
+    // vec2 y=0.5, because for taking middle of the y axis
     v_color = texture2DLod(u_dataTextureIn, vec2(ping_index, 0.0), 1.0);
-    v_color.rgba -= 0.01;
+    // v_color.rgba -= 0.01;
 
     // a_position.z is for texture coord, is the data texture's data index
-    gl_Position = vec4(pong_index, 0, 0, 1);
+    gl_Position = vec4(pong_index, 0.0, 0, 1);
   }
 
   if (2 == u_control) {
@@ -74,7 +74,6 @@ void main() {
 const fsSrc = `
 precision mediump float;
 varying vec4 v_color;
-varying float v_index;
 void main() {
   gl_FragColor = v_color;
 }
@@ -145,8 +144,8 @@ class GLColorfulDonut extends GLScene {
       // let color = [1, 0, 1, 1]
 
       // data: [posX, posY, volX, volY, accX, accY, reserve, reserve], uint32
-      let x = 800 / this.windowW
-      let y = 600 / this.windowH
+      let x = 100 / this.windowW
+      let y = 200 / this.windowH
       let dataX = float2U8(x)
       let dataY = float2U8(y)
       dataX.forEach((d, idx) => {
@@ -255,12 +254,18 @@ class GLColorfulDonut extends GLScene {
     gl.clearColor(r, g, b, a)
     gl.clear(gl.COLOR_BUFFER_BIT)
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, this.vertices.length / 3)
+//-------------
 
+    gl.uniform1i(this.u_control_loc, 1)
+    gl.drawArrays(gl.LINE_STRIP, 0, this.count)
+
+//--------------
+    debugger
     this.ppm.enablePong()
     gl.disable(gl.BLEND)
     let width = this.count * 8
     gl.viewport(0, 0, width, 1)
-    gl.clearColor(0, 0, 0, 0)
+    gl.clearColor(0.5, 0.6, 0.7, 0.8)
     gl.clear(gl.COLOR_BUFFER_BIT)
     
     // deal with color
@@ -268,12 +273,12 @@ class GLColorfulDonut extends GLScene {
     gl.drawArrays(gl.POINTS, 0, this.count)
 
     // deal with donut position
-    gl.uniform1i(this.u_control_loc, 2)
-    gl.drawArrays(gl.POINTS, 0, this.count)
+    // gl.uniform1i(this.u_control_loc, 2)
+    // gl.drawArrays(gl.POINTS, 0, this.count)
 
     // clear binding framebuffer
     gl.bindFramebuffer(gl.FRAMEBUFFER, null)
-    this.ppm.swapPingPong()
+    // this.ppm.swapPingPong()
   }
 }
 

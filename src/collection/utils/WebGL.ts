@@ -193,8 +193,8 @@ export function genDonut (
   let outerC = circleList[outerIdx]
 
   // debug position for x, y
-  let x = 0
-  let y = 0
+  let x = random()*300
+  let y = random()*300
 
   // flat zip two circle
   // pingpong渲染到texture时，只渲染donut第一个坐标
@@ -277,7 +277,7 @@ export class PingPongMGR {
     let {gl, texPing} = this
     gl.bindFramebuffer(gl.FRAMEBUFFER, null)
     gl.bindTexture(gl.TEXTURE_2D, texPing)
-    gl.uniform1i(this.u_control_loc, 0) // 1 stands for rendering to screen
+    gl.uniform1i(this.u_control_loc, 0) // 0 stands for rendering to screen
   }
   enablePong () {
     // render to texPong into frameBuffer
@@ -286,7 +286,6 @@ export class PingPongMGR {
     gl.bindTexture(gl.TEXTURE_2D, texPing) // data from ping, draw to pong
     const attachmentPoint = gl.COLOR_ATTACHMENT0
     gl.framebufferTexture2D(gl.FRAMEBUFFER, attachmentPoint, gl.TEXTURE_2D, texPong, 0)
-    gl.uniform1i(this.u_control_loc, 1) // 0 stands form rendering to texPong
   }
   swapPingPong () {
     let tmp = this.texPing
