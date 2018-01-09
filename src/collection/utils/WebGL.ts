@@ -215,6 +215,33 @@ export function genDonut (
   ret.unshift(ret[0], ret[1], 0) //开头的退化点，不能放前面，会改变index值
   return ret
 }
+// -------new donut generator: baseBone----------
+/**
+ * large index, minor index
+ * each donut index: use large index
+ * each vertex index: use minor index, here is 0(inner) or 1(outer)
+ * index = largeIdx * 1000 + minorIdx
+ * @param count 
+ * @param precision circle side count
+ */
+export function genStdDonuts (count: number, precision: number) {
+  const ret = []
+  const innerR = 5
+  const outerR = 10
+  const idxGen = new IndexGen()
+  const getIdx = (lIdx: number, mIdx: number) => lIdx*1000 + mIdx
+  let isOuter: boolean = false
+  for (let i=0; i<count; i++) {
+    let largeIdx = i
+    let index = getIdx(largeIdx, Number(isOuter))
+    ret.push(0, 5, index) // 退化三角形前锚点
+
+    for (let j=0; j<precision; j++) {
+      let angle = 2*PI/precision
+
+    }
+  }
+}
 
 /**
  * first bind to texPing, render to screen

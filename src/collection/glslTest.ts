@@ -84,8 +84,7 @@ const {random} = Math
 class GLColorfulDonut extends GLScene {
   private vertices: Float32Array
   private dataTexture: Uint8Array
-  // private fboPing: DataFBO
-  // private fboPong: DataFBO
+  private baseVertices: number[]
   private ppm: PingPongMGR
   private texIdxSwitcher: boolean = false // this is for fbo ping pong switch
   private idxStride: number
@@ -243,6 +242,9 @@ class GLColorfulDonut extends GLScene {
     // 4B color, 8B pos, 8B vol, 8B acc, 4B reserve, total 32B
     gl.uniform1f(u_totalCount, this.dataTexture.length / 32)
     gl.uniform1f(u_idxStride, this.idxStride)    
+  }
+  genBase () {
+    
   }
   renderMain (timestamp: number) {
     let {gl, bgColor, windowW, windowH} = this
