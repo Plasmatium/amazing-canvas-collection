@@ -228,19 +228,39 @@ export function genStdDonuts (count: number, precision: number) {
   const ret = []
   const innerR = 5
   const outerR = 10
-  const idxGen = new IndexGen()
   const getIdx = (lIdx: number, mIdx: number) => lIdx*1000 + mIdx
   let isOuter: boolean = false
   for (let i=0; i<count; i++) {
     let largeIdx = i
     let index = getIdx(largeIdx, Number(isOuter))
-    ret.push(0, 5, index) // 退化三角形前锚点
+    ret.push(0, innerR, index) // 退化三角形前锚点，inner
 
-    for (let j=0; j<precision; j++) {
-      let angle = 2*PI/precision
+    for (let j=0; j<=precision; j++) {
+      let angle = 2*PI/precision*j
+      isOuter = false
+      index = getIdx(largeIdx, Number(isOuter))
+      ret.push(
+        sin(angle)*innerR,
+        cos(angle)*innerR,
+        index
+      )
 
+      isOuter = true
+      index = getIdx(largeIdx, Number(isOuter))
+      ret.push(
+        sin(angle)*outerR,
+        cos(angle)*outerR,
+        index
+      )
     }
+
+    // 退化三角形后锚点
+    isOuter = true
+    index = getIdx(largeIdx, Number(isOuter))
+    ret.push(0, outerR, index)
   }
+  
+  return ret
 }
 
 /**
