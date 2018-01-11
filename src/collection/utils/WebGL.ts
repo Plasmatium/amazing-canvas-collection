@@ -211,7 +211,7 @@ export function genDonut (
     )
   }
   ret.push(ret[0], ret[1], 0, ret[3], ret[4], 0) // 闭合点
-  ret.push(ret[3], ret[4], 0) // 结尾化点
+  ret.push(ret[3], ret[4], 0) // 结尾退化点
   ret.unshift(ret[0], ret[1], 0) //开头的退化点，不能放前面，会改变index值
   return ret
 }
@@ -233,7 +233,9 @@ export function genStdDonuts (count: number, precision: number) {
   for (let i=0; i<count; i++) {
     let largeIdx = i
     let index = getIdx(largeIdx, Number(isOuter))
-    ret.push(0, innerR, index) // 退化三角形前锚点，inner
+    // TODO: dont know why push 2 times!!!
+    ret.push(0, innerR, index) // 退化三角形前锚点，inner 1
+    ret.push(0, innerR, index) // 退化三角形前锚点，inner 2
 
     for (let j=0; j<=precision; j++) {
       let angle = 2*PI/precision*j
