@@ -226,8 +226,8 @@ export function genDonut (
  */
 export function genStdDonuts (count: number, precision: number) {
   const ret = []
-  const innerR = 5
-  const outerR = 10
+  const innerR = 1
+  const outerR = 1
   const getIdx = (lIdx: number, mIdx: number) => lIdx*1000 + mIdx
   let isOuter: boolean = false
   for (let i=0; i<count; i++) {

@@ -22,9 +22,7 @@ let g_ = 1
 const vsSrc = `
 uniform vec2 u_resolution;
 uniform float u_totalCount;
-uniform sampler2D u_dataTextureIn;
-uniform int u_control;
-uniform float u_idxStride;
+uniform sampler2D u_texData;
 
 // a_position.z is index
 attribute vec3 a_position;
@@ -32,43 +30,25 @@ attribute vec3 a_position;
 varying vec4 v_color;
 
 void main() {
-  float v_index;
-  if (0 == u_control) {
-    // v_index first cut off to integrate number
-    v_index = float(int(a_position.z/u_idxStride));
-    v_index = v_index/u_totalCount; // [0.0, 1.0]
-    v_color = texture2DLod(u_dataTextureIn, vec2(v_index, 0.0), 1.0);
+  float largeIdx, minorIdx;
+  minorIdx = mod(a_position.z, 1000.0);
+  largeIdx = floor(a_position.z / 1000.0);
 
-    vec2 clip = a_position.xy/u_resolution*2.0 - 1.0;
+  // fetch color
+  float colorIdx = largeIdx / u_totalCount;
+  v_color = texture2DLod(u_texData, vec2(colorIdx, 0.5), 1.0);
 
-    gl_Position = vec4(clip, 0, 1);
-    return;
-  }
+  // fetch innerR or outerR
+  float radiusIdx = (largeIdx * 5.0 + 1.0 + minorIdx) / (u_totalCount * 5.0);
+  vec4 rd_vec = 255.0 * texture2DLod(u_texData, vec2(radiusIdx, 0.5), 1.0);
+  highp float radius = 100.0 * (rd_vec.r*float(0x1000000) + rd_vec.g*float(0x10000) + rd_vec.b*float(0x100) + rd_vec.a) / float(0xffffffff);
+  vec2 position = a_position.xy * (5.0 + 15.0 * minorIdx);
+  // vec2 position = a_position.xy * radius;
+  v_color = vec4(1.0-radiusIdx, radiusIdx*2.0, 0.3, 1.0);
 
-  if (1 == u_control) {
-    // decay color
-    // each sector is 32B / 4B, color offset is 0
-    // divide 4 stands for rgba, 4 value one group(pixel)
-    // +0.05 is a tiny positive offset to let GPU catch 
-    // the right index, or it would catch previous index
-    v_index = a_position.z / u_totalCount; // [0.0, 1.0]
-
-    // normalize to [-1,1], total width = u_totalCount * 32 / 4
-    // divide 4 stands for rgba, 4 value one group(pixel)
-    float ping_index = v_index;
-    float pong_index = v_index * 2.0 - 1.0; // scalar to [-1,1], for renderer
-
-    // vec2 y=0.5, because for taking middle of the y axis
-    v_color = texture2DLod(u_dataTextureIn, vec2(ping_index, 0.0), 1.0);
-    // v_color.rgba -= 0.01;
-
-    // a_position.z is for texture coord, is the data texture's data index
-    gl_Position = vec4(pong_index, 0.0, 0, 1);
-  }
-
-  if (2 == u_control) {
-
-  }
+  // window clip transform
+  vec2 clip = position / u_resolution * 2.0 - 1.0;
+  gl_Position = vec4(clip, 0, 1);
 }
 `
 
@@ -86,7 +66,6 @@ class GLColorfulDonut extends GLScene {
   private texData: Uint8Array
   private dataTexture: WebGLTexture | null
   private baseVertices: Float32Array
-  private u_control_loc: WebGLUniformLocation | null
   constructor (
     public bgColor: colorArray,
     private count: number,
@@ -97,6 +76,7 @@ class GLColorfulDonut extends GLScene {
     let {windowW, windowH, gl} = this
     this.genBase()
     this.genTexData()
+    console.log(this.texData)
 
     /**
      * init shader this.program
@@ -134,17 +114,7 @@ class GLColorfulDonut extends GLScene {
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST)
-    gl.texImage2D(
-      gl.TEXTURE_2D,
-      0,
-      gl.RGBA,
-      this.windowW,
-      this.windowH,
-      0,
-      gl.RGBA,
-      gl.UNSIGNED_BYTE,
-      this.texData
-    )
+
     /**
      * enable transparent alpha blend
      * refer to: http://www.halflab.me/2016/08/01/WebGL-premultiplied-alpha/
@@ -162,10 +132,7 @@ class GLColorfulDonut extends GLScene {
     // transform uniform variable
     let u_resolutionLoc = gl.getUniformLocation(this.program, 'u_resolution')
     let u_totalCount = gl.getUniformLocation(this.program, 'u_totalCount')
-    let u_idxStride = gl.getUniformLocation(this.program, 'u_idxStride')
     gl.uniform2f(u_resolutionLoc, windowW, windowH)
-    // in this data texture, each donut index has 32 bytes data,
-    // 4B color, 8B pos, 8B vol, 8B acc, 4B reserve, total 32B
     gl.uniform1f(u_totalCount, this.count)
     
     // -----------
@@ -176,20 +143,40 @@ class GLColorfulDonut extends GLScene {
   }
   genTexData () {
     let ret: number[] = []
+    // total 5 texel per donut
     for(let i=0; i<this.count; i++) {
-      // push color
-      ret.push(random()*255, random()*255, random()*255, 255)
+      // push color, 4 bytes, 1 texel
+      ret.push(random() * 255, random() * 255, random() * 255, 255)
 
-      // push posX and posY
+      // push innerR and outerR, 8 bytes, 2 texel
+      let innerR = 5 + random() * 10
+      let outerR = innerR + random() * 25
+      ret.push(...float2U8(innerR / 100))
+      ret.push(...float2U8(outerR / 100))
+
+      // push posX and posY, 8 bytes, 2 texel
       ret.push(...float2U8(random()))
       ret.push(...float2U8(random()))
     }
     this.texData = new Uint8Array(ret)
   }
-  mutate () {}
+  mutate () {
+  }
   renderMain (timestamp: number) {
     let {gl, bgColor, windowW, windowH} = this
     let [r, g, b, a] = bgColor
+
+    gl.texImage2D(
+      gl.TEXTURE_2D,
+      0,
+      gl.RGBA,
+      this.texData.length / 4, // 1 texel is rgba, how many rgbas?
+      1,
+      0,
+      gl.RGBA,
+      gl.UNSIGNED_BYTE,
+      this.texData
+    )
 
     gl.enable(gl.BLEND)
     gl.viewport(0, 0, windowW, windowH)
@@ -202,7 +189,7 @@ class GLColorfulDonut extends GLScene {
 }
 
 export function glslTest () {
-  const count = 3
+  const count = 1
   const precision = 32
   const circleList = genCircleList(5, 25, 0.1, precision)
 
