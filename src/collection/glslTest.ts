@@ -13,11 +13,11 @@ import {
   genCircleList,
   IndexGen,
   float2U8,
-  genStdDonuts
-} from './utils/WebGL'
-import { colorArray, TransferParam, randn_bm } from './utils/others'
+  genStdDonuts,
+} from './utils/WebGL';
+import { colorArray, TransferParam, randn_bm } from './utils/others';
 
-let g_ = 1
+const g_ = 1;
 // texture2DLod 最后参数1.0是不使用插值，直接使用raw值。
 const vsSrc = `
 uniform vec2 u_resolution;
@@ -78,7 +78,7 @@ float vec4ToFloat (vec4 arr) {
   vec4 co = vec4(1.0, 1.0/256.0, 1.0/65536.0, 1.0/16777216.0);
   return dot(arr, co);
 }
-`
+`;
 
 const fsSrc = `
 precision mediump float;
@@ -89,69 +89,69 @@ void main() {
   gl_FragColor = v_color;
   gl_FragColor.a *= 1.0 - distance_ratio * 1.75;
 }
-`
+`;
 
-const {random} = Math
+const { random } = Math;
 
 class GLColorfulDonut extends GLScene {
-  private texData: Uint8Array
+  private texData: Uint8Array = Uint8Array.from([])
   private dataTexture: WebGLTexture | null
-  private baseVertices: Float32Array
-  constructor (
+  private baseVertices: Float32Array = Float32Array.from([])
+  constructor(
     public bgColor: colorArray,
     private count: number,
     private precision: number,
-    private circleList: number[][] 
+    private circleList: number[][],
   ) {
-    super()
-    let {windowW, windowH, gl} = this
-    this.genBase()
-    this.genTexData()
-    console.log(this.texData)
+    super();
+    const { windowW, windowH, gl } = this;
+    this.genBase();
+    this.genTexData();
+    console.log(this.texData);
 
     /**
      * init shader this.program
      */
-    this.program = generateGLProgram(gl, vsSrc, fsSrc)
-    gl.useProgram(this.program)
+    this.program = generateGLProgram(gl, vsSrc, fsSrc);
+    gl.useProgram(this.program);
 
-    let positionsBuffer = gl.createBuffer()
+    const positionsBuffer = gl.createBuffer();
 
-    let pointerConfig = {
+    const pointerConfig = {
       size: 3,
       type: gl.FLOAT,
       normalize: false,
       stride: 0,
-      offset: 0
-    }
-    
+      offset: 0,
+    };
+
     /**
      * transfer vertices geometry
      */
-    jsArr2gRam(gl, gl.ARRAY_BUFFER, positionsBuffer, this.baseVertices, gl.STATIC_DRAW)
-    gRam2ShaderAttr(gl, gl.ARRAY_BUFFER, positionsBuffer, 'a_position', pointerConfig, this.program)
+    jsArr2gRam(gl, gl.ARRAY_BUFFER, positionsBuffer, this.baseVertices, gl.STATIC_DRAW);
+    gRam2ShaderAttr(gl, gl.ARRAY_BUFFER, positionsBuffer, 'a_position', pointerConfig, this.program);
 
     /**
      * transfer data texture
      * texture channel default to zero
      */
 
-    this.dataTexture = gl.createTexture()
-    gl.bindTexture(gl.TEXTURE_2D, this.dataTexture)
+    this.dataTexture = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, this.dataTexture);
     /**
      * refer to https://stackoverflow.com/questions/46262432/linear-filtering-of-floating-point-textures-in-webgl2
      * and firefox console error
      */
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST)
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
 
     /**
      * enable transparent alpha blend
      * refer to: http://www.halflab.me/2016/08/01/WebGL-premultiplied-alpha/
      */
-    gl.enable(gl.BLEND)
-    gl.blendEquation(gl.FUNC_ADD)
+    gl.enable(gl.BLEND);
+    gl.blendEquation(gl.FUNC_ADD);
     gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 
     /**
@@ -159,47 +159,49 @@ class GLColorfulDonut extends GLScene {
      */
     // gl.enable(gl.SAMPLE_COVERAGE)
     // gl.sampleCoverage(1.0, false)
-  
+
     // transform uniform variable
-    let u_resolutionLoc = gl.getUniformLocation(this.program, 'u_resolution')
-    let u_totalCount = gl.getUniformLocation(this.program, 'u_totalCount')
-    gl.uniform2f(u_resolutionLoc, windowW, windowH)
-    gl.uniform1f(u_totalCount, this.count)
-    
+    const u_resolutionLoc = gl.getUniformLocation(this.program, 'u_resolution');
+    const u_totalCount = gl.getUniformLocation(this.program, 'u_totalCount');
+    gl.uniform2f(u_resolutionLoc, windowW, windowH);
+    gl.uniform1f(u_totalCount, this.count);
+
     // -----------
-    this.genBase()
+    this.genBase();
   }
-  genBase () {
-    this.baseVertices = new Float32Array(genStdDonuts(this.count, 32))
+  genBase() {
+    this.baseVertices = new Float32Array(genStdDonuts(this.count, 32));
   }
-  genTexData () {
-    let ret: number[] = []
+  genTexData() {
+    const ret: number[] = [];
     // total 5 texel per donut
-    for(let i=0; i<this.count; i++) {
+    for (let i=0; i<this.count; i++) {
       // push color, 4 bytes, 1 texel
-      ret.push(random() * 255, random() * 255, random() * 255, 255)
+      ret.push(random() * 255, random() * 255, random() * 255, 255);
 
       // push innerR and outerR, 8 bytes, 2 texel
-      let innerR = 5 + random() * 10
-      let outerR = innerR + random() * 25
-      ret.push(...float2U8(innerR / 100))
-      ret.push(...float2U8(outerR / 100))
+      const innerR = 5 + random() * 10;
+      const outerR = innerR + random() * 25;
+      ret.push(...float2U8(innerR / 100));
+      ret.push(...float2U8(outerR / 100));
 
       // push posX and posY, 8 bytes, 2 texel
-      ret.push(...float2U8(random()))
-      ret.push(...float2U8(random()))
+      ret.push(...float2U8(random()));
+      ret.push(...float2U8(random()));
     }
-    this.texData = new Uint8Array(ret)
+    this.texData = new Uint8Array(ret);
   }
-  mutate () {
-    //4,5,6,7; 8,9,10,11
+  mutate() {
+    // 4,5,6,7; 8,9,10,11
     // let {texData} = this
     // texData[4] = texData[6] = texData[9] = texData[10] = 0
     // texData[5] = texData[7] = texData[8] = texData[11] = 255
   }
-  renderMain (timestamp: number) {
-    let {gl, bgColor, windowW, windowH} = this
-    let [r, g, b, a] = bgColor
+  renderMain(timestamp: number) {
+    const {
+      gl, bgColor, windowW, windowH,
+    } = this;
+    const [r, g, b, a] = bgColor;
 
     gl.texImage2D(
       gl.TEXTURE_2D,
@@ -210,36 +212,36 @@ class GLColorfulDonut extends GLScene {
       0,
       gl.RGBA,
       gl.UNSIGNED_BYTE,
-      this.texData
-    )
+      this.texData,
+    );
 
-    gl.enable(gl.BLEND)
-    gl.viewport(0, 0, windowW, windowH)
-    gl.clearColor(r, g, b, a)
-    gl.clear(gl.COLOR_BUFFER_BIT)
-    gl.drawArrays(gl.TRIANGLE_STRIP, 0, this.baseVertices.length / 3)
+    gl.enable(gl.BLEND);
+    gl.viewport(0, 0, windowW, windowH);
+    gl.clearColor(r, g, b, a);
+    gl.clear(gl.COLOR_BUFFER_BIT);
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, this.baseVertices.length / 3);
 
-    this.mutate()
+    this.mutate();
   }
 }
 
-export function glslTest () {
-  const count = 300
-  const precision = 32
-  const circleList = genCircleList(5, 25, 0.1, precision)
+export function glslTest() {
+  const count = 300;
+  const precision = 32;
+  const circleList = genCircleList(5, 25, 0.1, precision);
 
-  let scene = new GLColorfulDonut(
+  const scene = new GLColorfulDonut(
     [0.97, 0.96, 0.93, 1],
     count,
     precision,
-    circleList
-  )
+    circleList,
+  );
 
-  window.onresize = e => {
-    let target = e.target as (typeof window)
-    scene.canvas.height = target.innerHeight
-    scene.canvas.width = target.innerWidth
-  }
+  window.onresize = (e) => {
+    const target = e.target as (typeof window);
+    scene.canvas.height = target.innerHeight;
+    scene.canvas.width = target.innerWidth;
+  };
 
-  return scene
+  return scene;
 }

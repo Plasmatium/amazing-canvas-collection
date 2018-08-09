@@ -1,25 +1,38 @@
 {
   "compilerOptions": {
-      "outDir": "./built/",
-      "sourceMap": true,
-      "strict": true,
-      "noImplicitReturns": true,
-      "noImplicitAny": true,
-      "noImplicitThis": true,
-      "module": "esnext",
-      "target": "esnext",
-      "jsx": "preserve",
-      "moduleResolution": "node" // if don't set this, webpack won't work
+    "target": "esnext",
+    "module": "esnext",
+    "strict": true,
+    "jsx": "preserve",
+    "importHelpers": true,
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "sourceMap": true,
+    "baseUrl": ".",
+    "types": [
+      "node"
+    ],
+    "paths": {
+      "@/*": [
+        "src/*"
+      ]
+    },
+    "lib": [
+      "esnext",
+      "dom",
+      "dom.iterable",
+      "scripthost"
+    ]
   },
-  // 非常重要：如果没有include，那么就无法在*.ts中引用*.vue文件
-  // 详见：https://www.tslang.cn/docs/handbook/tsconfig-json.html
   "include": [
-      "./src",
-      "./test",
-      "node_modules/vue-tsx-support/enable-check.d.ts"
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "src/**/*.vue",
+    "tests/**/*.ts",
+    "tests/**/*.tsx"
   ],
   "exclude": [
-      "/node_modules"
-      // "./test"
+    "node_modules"
   ]
 }

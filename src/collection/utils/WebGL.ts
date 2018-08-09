@@ -1,60 +1,62 @@
-import { TransferParam, showFPS2 } from "./others";
-import { timestamp } from "rxjs/operators/timestamp";
+import { TransferParam, showFPS2 } from './others';
+// import { timestamp } from 'rxjs/operators/timestamp';
 
-let {random, round, floor, sin, cos, PI} = Math
+const {
+  random, round, floor, sin, cos, PI,
+} = Math;
 
 // 生成着色器方法，输入参数：渲染上下文，着色器类型，数据源
 export function generateGLShader(
   gl: WebGLRenderingContext,
-  type: number, source: string
+  type: number, source: string,
 ) {
-  let shader = gl.createShader(type); // 创建着色器对象
+  const shader = gl.createShader(type); // 创建着色器对象
   gl.shaderSource(shader, source); // 提供数据源
   gl.compileShader(shader); // 编译 -> 生成着色器
-  let success = gl.getShaderParameter(shader, gl.COMPILE_STATUS);
+  const success = gl.getShaderParameter(shader, gl.COMPILE_STATUS);
   if (!success) {
-    let errString = String(gl.getShaderInfoLog(shader));
+    const errString = String(gl.getShaderInfoLog(shader));
     gl.deleteShader(shader);
-    throw Error(errString)
+    throw Error(errString);
   }
   return shader as WebGLShader;
 }
 
 // 生成着色程序
-export function generateGLProgram (
+export function generateGLProgram(
   gl: WebGLRenderingContext,
   vsSrc: string,
-  fsSrc: string
+  fsSrc: string,
 ) {
-  let program = gl.createProgram();
+  const program = gl.createProgram();
 
-  let vertexShader = generateGLShader(gl, gl.VERTEX_SHADER, vsSrc);
+  const vertexShader = generateGLShader(gl, gl.VERTEX_SHADER, vsSrc);
   gl.attachShader(program, vertexShader);
-  
-  let fragmentShader = generateGLShader(gl, gl.FRAGMENT_SHADER, fsSrc);
+
+  const fragmentShader = generateGLShader(gl, gl.FRAGMENT_SHADER, fsSrc);
   gl.attachShader(program, fragmentShader);
 
   gl.linkProgram(program);
-  let success = gl.getProgramParameter(program, gl.LINK_STATUS);
+  const success = gl.getProgramParameter(program, gl.LINK_STATUS);
   if (!success) {
-    let errString = String(gl.getProgramInfoLog(program));
+    const errString = String(gl.getProgramInfoLog(program));
     gl.deleteProgram(program);
-    throw Error(errString)
+    throw Error(errString);
   }
-  return program; 
+  return program;
 }
 
 // 从js数据传送到显存
-export function jsArr2gRam (
+export function jsArr2gRam(
   gl: WebGLRenderingContext,
   target: number,
   buffer: WebGLBuffer | null, // this is gRam
   data: Float32Array,
-  usage: number
+  usage: number,
 ) {
-  gl.bindBuffer(target, buffer)
-  gl.bufferData(target, data, usage)
-  gl.bindBuffer(target, null)
+  gl.bindBuffer(target, buffer);
+  gl.bufferData(target, data, usage);
+  gl.bindBuffer(target, null);
 }
 
 // 将着色程序中的属性指定到显存位置 (属性可以是已索引的，也可以提供着色程序和名称)
@@ -81,26 +83,28 @@ export function gRam2ShaderAttr (
   program?: WebGLProgram | null
 ): void
 
-export function gRam2ShaderAttr (
+export function gRam2ShaderAttr(
   gl: WebGLRenderingContext,
   target: number,
   buffer: WebGLBuffer | null,
   attr: string | number,
   pointerConfig: PointerConfig,
-  program?: WebGLProgram | null
+  program?: WebGLProgram | null,
 ) {
-  let attrIdx: number
+  let attrIdx: number;
 
   if (typeof attr === 'string') {
-    if (!program) throw Error('webgl program should be provided if attr is string')
-    attrIdx = gl.getAttribLocation(program, attr)
-  } else attrIdx = attr
+    if (!program) throw Error('webgl program should be provided if attr is string');
+    attrIdx = gl.getAttribLocation(program, attr);
+  } else attrIdx = attr;
 
-  let {size, type, normalize, stride, offset} = pointerConfig
-  gl.bindBuffer(target, buffer)
-  gl.vertexAttribPointer(attrIdx, size, type, normalize, stride, offset)
-  gl.enableVertexAttribArray(attrIdx)
-  gl.bindBuffer(target, null)
+  const {
+    size, type, normalize, stride, offset,
+  } = pointerConfig;
+  gl.bindBuffer(target, buffer);
+  gl.vertexAttribPointer(attrIdx, size, type, normalize, stride, offset);
+  gl.enableVertexAttribArray(attrIdx);
+  gl.bindBuffer(target, null);
 }
 
 export abstract class GLScene {
@@ -109,97 +113,93 @@ export abstract class GLScene {
   protected gl: WebGLRenderingContext
   isRunning: boolean = false
   renderMask: Function[]
-  constructor () {
-    let canvas = document.getElementsByTagName('canvas')[0]
-    if (!canvas) throw Error('canvas not found')
-    let gl = canvas.getContext('webgl', {
+  constructor() {
+    const canvas = document.getElementsByTagName('canvas')[0];
+    if (!canvas) throw Error('canvas not found');
+    const gl = canvas.getContext('webgl', {
       alpha: false, // make canvas backdrop opaque, which speed up rendering
       // antialias: true
-    })
-    if (!gl) throw Error('get webgl context failed')
+    });
+    if (!gl) throw Error('get webgl context failed');
 
-    this.canvas = canvas
-    this.gl = gl
-    
-    this.renderMask = [showFPS2()]
+    this.canvas = canvas;
+    this.gl = gl;
+
+    this.renderMask = [showFPS2()];
   }
-  get windowW () { return this.canvas.width }
-  get windowH () { return this.canvas.height }
+  get windowW() { return this.canvas.width; }
+  get windowH() { return this.canvas.height; }
   abstract renderMain (timestamp: number): void
-  render (timestamp: number) {
-    this.isRunning && window.requestAnimationFrame(ts => {
-      this.render(ts)
-    })
-    this.renderMain(timestamp)
-    this.renderMask.forEach(mask => {
-      mask(timestamp, this.isRunning)
-    })
+  render(timestamp: number) {
+    this.isRunning && window.requestAnimationFrame((ts) => {
+      this.render(ts);
+    });
+    this.renderMain(timestamp);
+    this.renderMask.forEach((mask) => {
+      mask(timestamp, this.isRunning);
+    });
   }
-  run () {
-    this.isRunning = true
-    window.requestAnimationFrame(ts => this.render(ts))
+  run() {
+    this.isRunning = true;
+    window.requestAnimationFrame(ts => this.render(ts));
   }
-  destory () {
-    this.isRunning = false
+  destory() {
+    this.isRunning = false;
   }
-  onClick (e: MouseEvent) {}
+  onClick(e: MouseEvent) {}
 }
 
 // generator vertices
-export function genCircle (
+export function genCircle(
   r: number,
-  precision: number
+  precision: number,
 ) {
-  let ret: number[] = []
+  const ret: number[] = [];
   for (let i=0; i<2*PI; i += 2*PI/precision) {
-    ret.push(Math.sin(i)*r, Math.cos(i)*r)
+    ret.push(Math.sin(i)*r, Math.cos(i)*r);
   }
-  return ret
+  return ret;
 }
 
-export function genCircleList (
+export function genCircleList(
   start: number,
   end: number,
   step: number,
-  precision: number
+  precision: number,
 ) {
-  const circleList = []
+  const circleList = [];
   for (let i=start; i<end; i += step) {
-    circleList.push(i)
+    circleList.push(i);
   }
-  
-  return circleList.map(r => {
-    return genCircle(r, Math.floor(precision))
-  })
+
+  return circleList.map(r => genCircle(r, Math.floor(precision)));
 }
 
 // param startIdx for donut uniform startIdx
 export class IndexGen {
   private idx: number = 0
-  constructor () {}
-  resetIdx () { this.idx = 0 }
-  currIdx () { return this.idx }
-  pullIdx() { return this.idx++ }
+  constructor() {}
+  resetIdx() { this.idx = 0; }
+  currIdx() { return this.idx; }
+  pullIdx() { return this.idx++; }
 }
-export function genDonut (
-  circleList: number[][]
-) {
-  let len = circleList.length
-  let outerIdx = floor(random() * (len-len/2) + len/2) // [1, len-1]
-  let innerIdx = outerIdx
-  while (outerIdx - innerIdx <= 10) innerIdx = floor(random()*outerIdx) // [0, outer]
+export function genDonut(circleList: number[][]) {
+  let len = circleList.length;
+  const outerIdx = floor(random() * (len-len/2) + len/2); // [1, len-1]
+  let innerIdx = outerIdx;
+  while (outerIdx - innerIdx <= 10) innerIdx = floor(random()*outerIdx); // [0, outer]
 
-  let innerC = circleList[innerIdx]
-  let outerC = circleList[outerIdx]
+  const innerC = circleList[innerIdx];
+  const outerC = circleList[outerIdx];
 
   // debug position for x, y
-  let x = random()*300
-  let y = random()*300
+  const x = random()*300;
+  const y = random()*300;
 
   // flat zip two circle
   // pingpong渲染到texture时，只渲染donut第一个坐标
-  let ret: number[] = []
-  len = innerC.length
+  const ret: number[] = [];
+  len = innerC.length;
   for (let i=0; i<len; i+=2) {
     ret.push(
       innerC[i]+x,
@@ -207,13 +207,13 @@ export function genDonut (
       0,
       outerC[i]+x,
       outerC[i+1]+y,
-      0
-    )
+      0,
+    );
   }
-  ret.push(ret[0], ret[1], 0, ret[3], ret[4], 0) // 闭合点
-  ret.push(ret[3], ret[4], 0) // 结尾退化点
-  ret.unshift(ret[0], ret[1], 0) //开头的退化点，不能放前面，会改变index值
-  return ret
+  ret.push(ret[0], ret[1], 0, ret[3], ret[4], 0); // 闭合点
+  ret.push(ret[3], ret[4], 0); // 结尾退化点
+  ret.unshift(ret[0], ret[1], 0); // 开头的退化点，不能放前面，会改变index值
+  return ret;
 }
 // -------new donut generator: baseBone----------
 /**
@@ -221,55 +221,55 @@ export function genDonut (
  * each donut index: use large index
  * each vertex index: use minor index, here is 0(inner) or 1(outer)
  * index = largeIdx * 1000 + minorIdx
- * @param count 
+ * @param count
  * @param precision circle side count
  */
-export function genStdDonuts (count: number, precision: number) {
-  const ret = []
-  const innerR = 1
-  const outerR = 1
-  const getIdx = (lIdx: number, mIdx: number) => lIdx*1000 + mIdx
-  let isOuter: boolean = false
+export function genStdDonuts(count: number, precision: number) {
+  const ret = [];
+  const innerR = 1;
+  const outerR = 1;
+  const getIdx = (lIdx: number, mIdx: number) => lIdx*1000 + mIdx;
+  let isOuter: boolean = false;
   for (let i=0; i<count; i++) {
-    let largeIdx = i
-    let index = getIdx(largeIdx, Number(isOuter))
+    const largeIdx = i;
+    let index = getIdx(largeIdx, Number(isOuter));
     // TODO: dont know why push 2 times!!!
-    ret.push(0, innerR, index) // 退化三角形前锚点，inner 1
-    ret.push(0, innerR, index) // 退化三角形前锚点，inner 2
+    ret.push(0, innerR, index); // 退化三角形前锚点，inner 1
+    ret.push(0, innerR, index); // 退化三角形前锚点，inner 2
 
     for (let j=0; j<=precision; j++) {
-      let angle = 2*PI/precision*j
-      isOuter = false
-      index = getIdx(largeIdx, Number(isOuter))
+      const angle = 2*PI/precision*j;
+      isOuter = false;
+      index = getIdx(largeIdx, Number(isOuter));
       ret.push(
         sin(angle)*innerR,
         cos(angle)*innerR,
-        index
-      )
+        index,
+      );
 
-      isOuter = true
-      index = getIdx(largeIdx, Number(isOuter))
+      isOuter = true;
+      index = getIdx(largeIdx, Number(isOuter));
       ret.push(
         sin(angle)*outerR,
         cos(angle)*outerR,
-        index
-      )
+        index,
+      );
     }
 
     // 退化三角形后锚点
-    isOuter = true
-    index = getIdx(largeIdx, Number(isOuter))
-    ret.push(0, outerR, index)
+    isOuter = true;
+    index = getIdx(largeIdx, Number(isOuter));
+    ret.push(0, outerR, index);
   }
-  
-  return ret
+
+  return ret;
 }
 
 /**
  * first bind to texPing, render to screen
  * second bind to texPong, bind frameBuffer, render to texPong
  * then swap texPing and texPong
- * 
+ *
  * in texture data, use reserved data bytes to control
  * if should discard in shader program
  * (retransfer vertices to GPU is slow, it takes about 0.5~1.5ms)
@@ -278,27 +278,27 @@ export class PingPongMGR {
   private texPing: WebGLTexture | null
   private texPong: WebGLTexture | null
   private frameBuffer: WebGLFramebuffer | null
-  constructor (
+  constructor(
     private gl: WebGLRenderingContext,
     private width: number,
     private height: number,
     private dataType: number,
-    private u_control_loc: WebGLUniformLocation | null
+    private u_control_loc: WebGLUniformLocation | null,
   ) {
-    this.texPing = gl.createTexture()
-    this.texPong = gl.createTexture()
-    this.frameBuffer = gl.createFramebuffer()
+    this.texPing = gl.createTexture();
+    this.texPong = gl.createTexture();
+    this.frameBuffer = gl.createFramebuffer();
   }
-  initData (
+  initData(
     data: Uint8Array | Float32Array | null,
-    tex: WebGLTexture | null
+    tex: WebGLTexture | null,
   ) {
-    let {gl} = this
-    gl.bindTexture(gl.TEXTURE_2D, tex)
-    
+    const { gl } = this;
+    gl.bindTexture(gl.TEXTURE_2D, tex);
+
     if (this.dataType === gl.FLOAT) {
-      gl.getExtension('OES_texture_float')
-      gl.getExtension('OES_texture_float_linear')
+      gl.getExtension('OES_texture_float');
+      gl.getExtension('OES_texture_float_linear');
     }
     /**
      * refer to https://stackoverflow.com/questions/46262432/linear-filtering-of-floating-point-textures-in-webgl2
@@ -316,61 +316,64 @@ export class PingPongMGR {
       0,
       gl.RGBA,
       this.dataType,
-      data
-    )
+      data,
+    );
   }
-  initPing (data: Uint8Array | Float32Array) { this.initData(data, this.texPing) }
-  initPong () { this.initData(null, this.texPong) }
-  enablePing () {
+  initPing(data: Uint8Array | Float32Array) { this.initData(data, this.texPing); }
+  initPong() { this.initData(null, this.texPong); }
+  enablePing() {
     // render to screen from using texPing
-    let {gl, texPing} = this
-    gl.bindFramebuffer(gl.FRAMEBUFFER, null)
-    gl.bindTexture(gl.TEXTURE_2D, texPing)
-    gl.uniform1i(this.u_control_loc, 0) // 0 stands for rendering to screen
+    const { gl, texPing } = this;
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    gl.bindTexture(gl.TEXTURE_2D, texPing);
+    gl.uniform1i(this.u_control_loc, 0); // 0 stands for rendering to screen
   }
-  enablePong () {
+  enablePong() {
     // render to texPong into frameBuffer
-    let {gl, texPong, texPing, frameBuffer} = this
-    gl.bindFramebuffer(gl.FRAMEBUFFER, frameBuffer)
-    gl.bindTexture(gl.TEXTURE_2D, texPing) // data from ping, draw to pong
-    const attachmentPoint = gl.COLOR_ATTACHMENT0
-    gl.framebufferTexture2D(gl.FRAMEBUFFER, attachmentPoint, gl.TEXTURE_2D, texPong, 0)
+    const {
+      gl, texPong, texPing, frameBuffer,
+    } = this;
+    gl.bindFramebuffer(gl.FRAMEBUFFER, frameBuffer);
+    gl.bindTexture(gl.TEXTURE_2D, texPing); // data from ping, draw to pong
+    const attachmentPoint = gl.COLOR_ATTACHMENT0;
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, attachmentPoint, gl.TEXTURE_2D, texPong, 0);
   }
-  swapPingPong () {
-    let tmp = this.texPing
-    this.texPing = this.texPong
-    this.texPong = tmp
+  swapPingPong() {
+    const tmp = this.texPing;
+    this.texPing = this.texPong;
+    this.texPong = tmp;
   }
-  readTexture (id: 0|1) {
-    let {gl, texPing, texPong, frameBuffer} = this
-    let tex = id ? texPing : texPong
-    gl.bindFramebuffer(gl.FRAMEBUFFER, frameBuffer)
-    const attachmentPoint = gl.COLOR_ATTACHMENT0
-    gl.framebufferTexture2D(gl.FRAMEBUFFER, attachmentPoint, gl.TEXTURE_2D, tex, 0)
-    
-    const pixels = new Uint8Array(this.width * 4) // *4 for rgba, 4 channel
-    gl.readPixels(0, 0, this.width, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixels)
+  readTexture(id: 0|1) {
+    const {
+      gl, texPing, texPong, frameBuffer,
+    } = this;
+    const tex = id ? texPing : texPong;
+    gl.bindFramebuffer(gl.FRAMEBUFFER, frameBuffer);
+    const attachmentPoint = gl.COLOR_ATTACHMENT0;
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, attachmentPoint, gl.TEXTURE_2D, tex, 0);
+
+    const pixels = new Uint8Array(this.width * 4); // *4 for rgba, 4 channel
+    gl.readPixels(0, 0, this.width, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
     pixels.reduce((acc: number[], val, idx) => {
       if (idx % 4 === 3) {
-        console.log([...acc, val])
-        return []
-      } else {
-        return [...acc, val]
+        console.log([...acc, val]);
+        return [];
       }
-    }, [])
+      return [...acc, val];
+    }, []);
   }
 }
 
-export function float2U8 (num: number) {
+export function float2U8(num: number) {
   if (num >= 1) {
-    console.error(`f: ${num} is larger then 1`)
-    return [0xcd, 0xcd, 0xcd, 0xcd]
+    console.error(`f: ${num} is larger then 1`);
+    return [0xcd, 0xcd, 0xcd, 0xcd];
   }
-  let str = Math.floor(num*0xffffffff).toString(16).padStart(8, '0')
-  let ret: number[] = []
+  const str = Math.floor(num*0xffffffff).toString(16).padStart(8, '0');
+  const ret: number[] = [];
   for (let i=0; i<4; i++) {
-    let tmp = Number('0x' + str.slice(i*2, i*2+2))
-    ret.push(tmp)
+    const tmp = Number(`0x${str.slice(i*2, i*2+2)}`);
+    ret.push(tmp);
   }
-  return ret
+  return ret;
 }
