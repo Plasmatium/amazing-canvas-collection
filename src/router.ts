@@ -16,6 +16,7 @@ routes.push({
 });
 
 export const router = new VueRouter({
+  base: '/amazing-canvas-collection',
   routes,
   mode: 'history',
 });

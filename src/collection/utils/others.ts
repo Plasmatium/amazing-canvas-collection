@@ -1,13 +1,6 @@
 import { Canvas } from './Canvas';
 import { Subject } from 'rxjs';
-
-import 'rxjs/add/operator/pairwise';
-import 'rxjs/add/operator/map';
-import 'rxjs/add/operator/bufferCount';
-import 'rxjs/add/operator/scan';
-import 'rxjs/add/operator/timeout';
-// import { emit } from 'cluster';
-
+import { pairwise, map, bufferCount, scan, timeout } from 'rxjs/operators';
 
 const {
   floor, random, sin, cos, tan, PI,
@@ -144,25 +137,44 @@ export function showFPS2() {
   if (!ctx) throw Error('fps present mask canvas not found');
 
   const emitter = new Subject<number>();
-  // const emitter = new Observable<number>();
-  const fpsSubscription = emitter
-    .pairwise()
-    .map(([prev, curr]) => curr - prev)
-    .bufferCount(100, 1)
-    .scan((presentFPS, fpsArr, idx) => {
+  console.log(Subject);
+  console.log(emitter);
+  // const fpsSubscription = emitter
+  //   .pairwise()
+  //   .map(([prev, curr]) => curr - prev)
+  //   .bufferCount(100, 1)
+  //   .scan((presentFPS, fpsArr, idx) => {
+  //     if (idx%33 === 0) {
+  //       const timeCost = fpsArr.reduce((sum, d) => sum+d, 0);
+  //       const fps = (100*1000/timeCost).toFixed(1);
+  //       presentFPS = fps;
+  //     }
+  //     return presentFPS;
+  //   }, '0')
+  //   .subscribe((fps) => {
+  //     ctx.clearRect(0, 0, 90, 30);
+  //     ctx.fillStyle = '#444';
+  //     ctx.font = '16px helvetica, sans';
+  //     ctx.fillText(`FPS: ${fps}`, 10, 20);
+  //   });
+  emitter.pipe(
+    pairwise(),
+    map(([prev, curr]) => curr - prev),
+    bufferCount(100, 1),
+    scan((presentFPS: string, fpsArr: number[], idx) => {
       if (idx%33 === 0) {
         const timeCost = fpsArr.reduce((sum, d) => sum+d, 0);
         const fps = (100*1000/timeCost).toFixed(1);
         presentFPS = fps;
       }
       return presentFPS;
-    }, '0')
-    .subscribe((fps) => {
-      ctx.clearRect(0, 0, 90, 30);
-      ctx.fillStyle = '#444';
-      ctx.font = '16px helvetica, sans';
-      ctx.fillText(`FPS: ${fps}`, 10, 20);
-    });
+    }, '0'),
+  ).subscribe((fps) => {
+    ctx.clearRect(0, 0, 90, 30);
+    ctx.fillStyle = '#444';
+    ctx.font = '16px helvetica, sans';
+    ctx.fillText(`FPS: ${fps}`, 10, 20);
+  });
 
   emitter.next(+new Date());
   function fpsEmitter(timestemp: number, isRunning: boolean) {

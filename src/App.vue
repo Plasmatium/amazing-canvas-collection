@@ -1,5 +1,9 @@
 <template>
   <div id="app">
+    <a href="https://github.com/Plasmatium/amazing-canvas-collection">
+      <img style="position: absolute; top: 0; left: 0; border: 0;"
+        :src="forkmeImg"
+        alt="Fork me on GitHub"></a>
     <div class="menu-container">
       <router-link
         class="script-link"
@@ -19,6 +23,8 @@ import { makeCanvas } from './components/vue-canvas';
 import { router, links } from './router';
 import VueRouter from 'vue-router';
 
+const forkmeImg = require('./assets/forkme.png');
+
 Vue.use(VueRouter);
 
 export default Vue.extend({
@@ -26,6 +32,7 @@ export default Vue.extend({
   data() {
     return {
       links,
+      forkmeImg,
     };
   },
   router,
